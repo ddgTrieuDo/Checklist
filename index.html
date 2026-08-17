@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <title>Sơ đồ Quy trình Chi tiết – Master Checklist Full Plumbing Detailing</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --ink:#1b2430;
@@ -217,6 +218,39 @@
   }
   .statusdrop.answered{border-color:#9fcbad;background:#eef8f1;color:#154d29;font-weight:600;}
   footer{text-align:center;color:var(--sub);font-size:12px;margin-top:20px;}
+
+  /* ---- Project gate (chọn / tạo dự án dùng chung) ---- */
+  .gate-overlay{
+    position:fixed;inset:0;z-index:100;
+    background:rgba(27,36,48,.55);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .gate-card{
+    background:#fff;border-radius:14px;padding:26px 28px;max-width:420px;width:100%;
+    box-shadow:0 8px 30px rgba(16,24,32,.25);
+  }
+  .gate-card h2{font-size:17px;margin:0 0 6px;}
+  .gate-card p{font-size:12.5px;color:var(--sub);margin:0 0 16px;line-height:1.5;}
+  .gate-field{margin-bottom:12px;}
+  .gate-field label{display:block;font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px;}
+  .gate-field input{
+    width:100%;font-size:14px;border:1px solid var(--line);border-radius:8px;
+    padding:9px 11px;box-sizing:border-box;
+  }
+  .gate-btn{
+    width:100%;font-size:14px;font-weight:700;color:#fff;background:var(--accent);
+    border:none;border-radius:8px;padding:11px;cursor:pointer;margin-top:4px;
+  }
+  .gate-btn:hover{background:#255a87;}
+  .gate-btn:disabled{background:#a9c1d6;cursor:wait;}
+  .gate-error{font-size:12.5px;color:#c0392b;margin-top:10px;min-height:1em;}
+  .gate-hint{font-size:11px;color:var(--sub);margin-top:14px;line-height:1.5;}
+  .syncstatus{font-size:11.5px;color:var(--sub);display:flex;align-items:center;gap:6px;}
+  .syncstatus .dot{width:8px;height:8px;border-radius:50%;background:#c99a2e;flex:none;}
+  .syncstatus.ok .dot{background:var(--green);}
+  .syncstatus.err .dot{background:#c0392b;}
+  .switchprojlink{font-size:11.5px;color:var(--accent);cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;}
   @media print {
     .navbar{position:static;}
     .toolbar{display:none;}
@@ -224,6 +258,29 @@
 </style>
 </head>
 <body>
+
+<div class="gate-overlay" id="gateOverlay">
+  <div class="gate-card">
+    <h2>Chọn / Tạo dự án</h2>
+    <p>Nhập tên dự án và mã truy cập. Nếu tên dự án chưa từng dùng, hệ thống sẽ tự tạo mới với mã bạn nhập — hãy chia sẻ đúng tên + mã này cho những người cùng làm dự án để họ vào chung, tick chung và thấy tiến độ của nhau theo thời gian thực.</p>
+    <div class="gate-field">
+      <label for="gateProjectName">Tên dự án</label>
+      <input type="text" id="gateProjectName" placeholder="VD: Toa nha ABC - Block A" />
+    </div>
+    <div class="gate-field">
+      <label for="gateAccessCode">Mã truy cập</label>
+      <input type="text" id="gateAccessCode" placeholder="VD: abc123" />
+    </div>
+    <div class="gate-field">
+      <label for="gateWorkerName">Tên bạn (không bắt buộc)</label>
+      <input type="text" id="gateWorkerName" placeholder="VD: Minh - Detailer" />
+    </div>
+    <button type="button" class="gate-btn" id="gateBtnEnter">Vào dự án</button>
+    <div class="gate-error" id="gateError"></div>
+    <p class="gate-hint">Lưu ý: đây là lớp bảo vệ nhẹ theo mã dự án (không phải đăng nhập tài khoản) — ai biết đúng tên + mã dự án đều xem/sửa được dự án đó.</p>
+  </div>
+</div>
+
 <div class="navbar">
   <div class="navlinks">
     <a href="#top" class="navlink">↑ Tổng quan</a>
@@ -243,11 +300,13 @@
       <div class="progressbar"><div class="progressbar-fill" id="overallFill"></div></div>
     </div>
     <input type="text" id="workerName" class="nameinput" placeholder="Tên người thực hiện" />
-    <button class="toolbtn primary" id="btnSave">💾 Lưu tiến độ</button>
-    <button class="toolbtn" id="btnLoad">📂 Tải tiến độ đã lưu</button>
+    <button class="toolbtn primary" id="btnSave">💾 Lưu tiến độ (file)</button>
+    <button class="toolbtn" id="btnLoad">📂 Tải tiến độ (file)</button>
     <input type="file" id="fileInput" accept="application/json" style="display:none" />
     <button class="toolbtn danger" id="btnReset">↺ Xoá hết tick</button>
     <span class="savestatus" id="saveStatus"></span>
+    <span class="syncstatus" id="syncStatus"><span class="dot"></span><span id="syncStatusText">Chưa vào dự án</span></span>
+    <button type="button" class="switchprojlink" id="btnSwitchProject">Đổi dự án</button>
   </div>
 </div>
 <div class="wrap">
@@ -262,13 +321,13 @@
       Tích vào từng mục khi đã hoàn thành. Một số mục (vd. Scope Boundary, Document Conflict Check, Approval Status, Shop Sleeve Status...) hiển thị dưới dạng <b>dropdown chọn trạng thái</b> thay vì ô tích, vì bản chất là chọn 1 trong nhiều trạng thái chứ không phải chỉ "đã làm/chưa làm". Nếu cả một mục nhỏ hoặc cả một Giai đoạn đã xong, dùng nút <b>"☑ Tích hết"</b> ở đầu mỗi khung (hoặc <b>"☑ Tích hết Giai đoạn"</b> ở đầu mỗi Giai đoạn) để tích nhanh toàn bộ ô tích — nút này không tự chọn hộ các dropdown trạng thái, để tránh chọn sai.
     </p>
     <p style="font-size:13px;color:var(--sub);margin:0 0 8px;">
-      <b>Tự nhớ tiến độ — không cần bấm gì:</b> mỗi lần tích hoặc chọn trạng thái, trang tự lưu ngay vào trình duyệt bạn đang dùng. Đóng trang lại, mở lại file này (trên cùng máy, cùng trình duyệt) là mọi thứ vẫn còn nguyên, không cần làm gì thêm. Cách này chỉ nhớ trên đúng máy + đúng trình duyệt đó thôi — mở file này ở máy khác hoặc trình duyệt khác sẽ không thấy tiến độ.
+      <b>Dùng chung nhiều người — tự đồng bộ qua Internet:</b> khi mở trang, bạn nhập Tên dự án + Mã truy cập để "vào" đúng dự án của mình. Mọi người dùng đúng tên + mã đó (dù ở máy khác, nơi khác) sẽ thấy chung 1 checklist — ai tích hoặc chọn trạng thái, người khác đang mở trang cũng thấy cập nhật gần như ngay lập tức, không cần tải lại trang. Góc thanh công cụ có chấm tròn báo trạng thái kết nối (xanh = đang đồng bộ tốt). Muốn đổi sang dự án khác, bấm <b>"Đổi dự án"</b>.
     </p>
     <p style="font-size:13px;color:var(--sub);margin:0 0 8px;">
-      <b>Muốn chuyển sang máy khác / gửi cho người khác:</b> bấm <b>"💾 Lưu tiến độ"</b> để tải xuống 1 file <code>tien-do-checklist.json</code> ghi lại toàn bộ mục đã tích và trạng thái đã chọn — gửi file này qua Zalo/Email, hoặc copy vào cùng thư mục dự án ở máy khác. Bên nhận mở trang này rồi bấm <b>"📂 Tải tiến độ đã lưu"</b>, chọn đúng file đó là khôi phục lại toàn bộ.
+      <b>Sao lưu ra file (tuỳ chọn):</b> ngoài đồng bộ tự động, bạn vẫn có thể bấm <b>"💾 Lưu tiến độ (file)"</b> để tải xuống 1 file <code>tien-do-checklist.json</code> làm bản sao lưu riêng, hoặc gửi cho ai không tiện vào mạng lúc đó. Bấm <b>"📂 Tải tiến độ (file)"</b> để nạp lại 1 file đã lưu — dữ liệu nạp vào sẽ đồng bộ luôn lên dự án đang mở.
     </p>
     <p style="font-size:12px;color:var(--sub);margin:0;">
-      Trang cũng thử tự tìm file <code>tien-do-checklist.json</code> nếu nó nằm sẵn cùng thư mục — nhưng tính năng này phụ thuộc thiết lập trình duyệt (Chrome/Edge mở file bằng double-click thường chặn vì lý do bảo mật) nên không phải lúc nào cũng chạy được; nếu không tự tải, dùng nút "📂 Tải tiến độ đã lưu" như trên là chắc chắn nhất. Có thể đặt Tên người thực hiện trước khi Lưu để dễ biết ai đã cập nhật gần nhất.
+      Lưu ý: đồng bộ cần có Internet. Nếu mất mạng giữa chừng, trang vẫn cho tích bình thường trên máy bạn, chấm trạng thái sẽ chuyển đỏ báo "mất kết nối" — khi có mạng lại, bấm tích thêm 1 mục bất kỳ (hoặc tải lại trang) để đồng bộ tiếp.
     </p>
   </div>
 
@@ -1978,7 +2037,12 @@
 <script>
 (function() {
   var SAVE_FILENAME = 'tien-do-checklist.json';
-  var LOCAL_KEY = 'plumbing_checklist_progress_v3_9phase';
+  var LAST_PROJECT_KEY = 'plumbing_last_project_v1';
+  var CACHE_PREFIX = 'plumbing_project_cache_v1_';
+
+  var SUPABASE_URL = 'https://owevmiwcacptrhchgtkx.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_FP-93thPbaqNpRG2e1ja0w_sx7pHmEj';
+  var sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
   // Unified progress model: every trackable item is either
   //   <input type="checkbox" class="chk">  -- answered when .checked
@@ -1992,39 +2056,47 @@
   var checkboxes = allEls.filter(function(el) { return el.tagName === 'INPUT'; });
   var selects = allEls.filter(function(el) { return el.tagName === 'SELECT'; });
   var TOTAL = allEls.length;
+  var elById = {};
+  allEls.forEach(function(el) { elById[el.getAttribute('data-id')] = el; });
+
+  var CURRENT_PROJECT = null;  // {id, name, code}
+  var realtimeChannel = null;
+  var suppressRemote = false;  // true while applying a remote/initial update, to avoid write-back loops
 
   function isAnswered(el) {
     return el.tagName === 'SELECT' ? el.value !== '' : el.checked;
   }
   function idOf(el) { return el.getAttribute('data-id'); }
+  function valueOf(el) {
+    return el.tagName === 'SELECT' ? el.value : (el.checked ? '1' : '');
+  }
+  function setElValue(el, val) {
+    if (el.tagName === 'SELECT') { el.value = val || ''; } else { el.checked = val === '1'; }
+  }
 
-  // localStorage helpers — wrapped defensively. In a normal browser tab (the common
-  // case: this file downloaded and opened directly, e.g. by double-click) this works
-  // fine and persists per browser/device. In some sandboxed viewers storage APIs can be
-  // blocked entirely, so every call is try/caught and silently no-ops if unavailable —
-  // the manual Save/Load-file buttons keep working either way.
-  function localSave() {
+  // ---- last-used project on this browser (autofill + auto-reconnect) ----
+  function saveLastProject(name, code, worker) {
+    try { window.localStorage.setItem(LAST_PROJECT_KEY, JSON.stringify({name: name, code: code, worker: worker || ''})); } catch (e) {}
+  }
+  function loadLastProject() {
+    try { var raw = window.localStorage.getItem(LAST_PROJECT_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+  }
+  function clearLastProject() {
+    try { window.localStorage.removeItem(LAST_PROJECT_KEY); } catch (e) {}
+  }
+
+  // ---- per-project local cache: instant paint on reopen + light offline resilience ----
+  function cacheProjectLocally() {
+    if (!CURRENT_PROJECT) return;
     try {
       var checkedIds = checkboxes.filter(function(cb) { return cb.checked; }).map(idOf);
       var fieldValues = {};
       selects.forEach(function(sel) { if (sel.value !== '') fieldValues[idOf(sel)] = sel.value; });
-      var payload = {
-        savedAt: new Date().toISOString(),
-        workerName: document.getElementById('workerName').value || '',
-        checkedIds: checkedIds,
-        fieldValues: fieldValues
-      };
-      window.localStorage.setItem(LOCAL_KEY, JSON.stringify(payload));
-    } catch (e) { /* storage unavailable — ignore, file-based Save/Load still works */ }
+      window.localStorage.setItem(CACHE_PREFIX + CURRENT_PROJECT.id, JSON.stringify({checkedIds: checkedIds, fieldValues: fieldValues}));
+    } catch (e) {}
   }
-  function localLoad() {
-    try {
-      var raw = window.localStorage.getItem(LOCAL_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch (e) { return null; }
-  }
-  function localClear() {
-    try { window.localStorage.removeItem(LOCAL_KEY); } catch (e) { /* ignore */ }
+  function loadProjectCache(projectId) {
+    try { var raw = window.localStorage.getItem(CACHE_PREFIX + projectId); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
   }
 
   function updateProgress() {
@@ -2066,8 +2138,88 @@
     });
   }
 
+  // ---- sync status indicator ----
+  function setSyncStatus(cls, text) {
+    var el = document.getElementById('syncStatus');
+    el.className = 'syncstatus' + (cls ? (' ' + cls) : '');
+    document.getElementById('syncStatusText').textContent = text;
+  }
+
+  // ---- remote (Supabase) read/write ----
+  function remoteSaveOne(el) {
+    if (!sb || !CURRENT_PROJECT || suppressRemote) return;
+    var row = {
+      project_id: CURRENT_PROJECT.id,
+      item_id: idOf(el),
+      value: valueOf(el),
+      updated_by: document.getElementById('workerName').value || null
+    };
+    sb.from('progress').upsert(row).then(function(res) {
+      if (res.error) { setSyncStatus('err', 'Lỗi đồng bộ: ' + res.error.message); }
+      else { setSyncStatus('ok', 'Đồng bộ: ' + CURRENT_PROJECT.name); }
+    });
+  }
+  function remoteSaveMany(els) {
+    if (!sb || !CURRENT_PROJECT || suppressRemote || !els.length) return;
+    var worker = document.getElementById('workerName').value || null;
+    var rows = els.map(function(el) {
+      return { project_id: CURRENT_PROJECT.id, item_id: idOf(el), value: valueOf(el), updated_by: worker };
+    });
+    setSyncStatus('', 'Đang đồng bộ ' + rows.length + ' mục...');
+    sb.from('progress').upsert(rows).then(function(res) {
+      if (res.error) { setSyncStatus('err', 'Lỗi đồng bộ: ' + res.error.message); }
+      else { setSyncStatus('ok', 'Đồng bộ: ' + CURRENT_PROJECT.name); }
+    });
+  }
+  function remoteClearProject() {
+    if (!sb || !CURRENT_PROJECT) return;
+    sb.from('progress').delete().eq('project_id', CURRENT_PROJECT.id).then(function(res) {
+      if (res.error) { setSyncStatus('err', 'Lỗi xoá: ' + res.error.message); }
+      else { setSyncStatus('ok', 'Đã xoá — đồng bộ: ' + CURRENT_PROJECT.name); }
+    });
+  }
+  function applyRemoteRow(row) {
+    var el = elById[row.item_id];
+    if (!el) return;
+    suppressRemote = true;
+    setElValue(el, row.value);
+    suppressRemote = false;
+  }
+  function loadInitialProgress() {
+    return sb.from('progress').select('item_id,value').eq('project_id', CURRENT_PROJECT.id).then(function(res) {
+      if (res.error) throw res.error;
+      suppressRemote = true;
+      (res.data || []).forEach(function(row) {
+        var el = elById[row.item_id];
+        if (el) setElValue(el, row.value);
+      });
+      suppressRemote = false;
+      updateProgress();
+      cacheProjectLocally();
+    });
+  }
+  function subscribeRealtime() {
+    if (realtimeChannel) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
+    realtimeChannel = sb.channel('progress-' + CURRENT_PROJECT.id)
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'progress', filter: 'project_id=eq.' + CURRENT_PROJECT.id}, function(payload) {
+        var row = (payload.new && Object.keys(payload.new).length) ? payload.new : payload.old;
+        if (!row) return;
+        applyRemoteRow(payload.eventType === 'DELETE' ? {item_id: row.item_id, value: ''} : row);
+        updateProgress();
+        cacheProjectLocally();
+      })
+      .subscribe(function(status) {
+        if (status === 'SUBSCRIBED') { setSyncStatus('ok', 'Đồng bộ: ' + CURRENT_PROJECT.name); }
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { setSyncStatus('err', 'Mất kết nối đồng bộ — đang thử lại...'); }
+      });
+  }
+
   allEls.forEach(function(el) {
-    el.addEventListener('change', function() { updateProgress(); localSave(); });
+    el.addEventListener('change', function() {
+      updateProgress();
+      cacheProjectLocally();
+      remoteSaveOne(el);
+    });
   });
 
   document.querySelectorAll('.checkallbtn').forEach(function(btn) {
@@ -2080,7 +2232,8 @@
       var allChecked = scoped.length > 0 && scoped.every(function(cb) { return cb.checked; });
       scoped.forEach(function(cb) { cb.checked = !allChecked; });
       updateProgress();
-      localSave();
+      cacheProjectLocally();
+      remoteSaveMany(scoped);
     });
   });
 
@@ -2089,7 +2242,7 @@
     el.textContent = msg;
   }
 
-  function applyProgressData(data, sourceLabel, alsoLocalSave) {
+  function applyProgressData(data, sourceLabel, pushRemote) {
     var idSet = {};
     (data.checkedIds || []).forEach(function(id) { idSet[id] = true; });
     checkboxes.forEach(function(cb) { cb.checked = !!idSet[idOf(cb)]; });
@@ -2097,10 +2250,11 @@
     selects.forEach(function(sel) { sel.value = fv[idOf(sel)] || ''; });
     if (data.workerName) { document.getElementById('workerName').value = data.workerName; }
     updateProgress();
+    cacheProjectLocally();
     var answeredCount = (data.checkedIds || []).length + Object.keys(fv).length;
     var who = data.workerName ? (' (' + data.workerName + ')') : '';
-    setStatus('Đã tải ' + answeredCount + ' mục từ ' + sourceLabel + who);
-    if (alsoLocalSave) localSave();
+    setStatus('Đã tải ' + answeredCount + ' mục từ ' + sourceLabel + who + (pushRemote ? ' — đang đồng bộ lên dự án...' : ''));
+    if (pushRemote) remoteSaveMany(allEls.filter(isAnswered));
   }
 
   document.getElementById('btnSave').addEventListener('click', function() {
@@ -2109,6 +2263,7 @@
     selects.forEach(function(sel) { if (sel.value !== '') fieldValues[idOf(sel)] = sel.value; });
     var payload = {
       document: 'MASTER CHECKLIST - FULL PLUMBING DETAILING',
+      project: CURRENT_PROJECT ? CURRENT_PROJECT.name : '',
       savedAt: new Date().toISOString(),
       workerName: document.getElementById('workerName').value || '',
       totalItems: TOTAL,
@@ -2116,17 +2271,17 @@
       checkedIds: checkedIds,
       fieldValues: fieldValues
     };
+    var fname = CURRENT_PROJECT ? (CURRENT_PROJECT.name.replace(/[^a-zA-Z0-9-_]+/g, '_') + '-tien-do.json') : SAVE_FILENAME;
     var blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = SAVE_FILENAME;
+    a.download = fname;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    localSave();
-    setStatus('Đã lưu ' + payload.checkedCount + ' mục vào file "' + SAVE_FILENAME + '" lúc ' + new Date().toLocaleTimeString('vi-VN') + '. Trang này cũng tự nhớ tiến độ ngay trong trình duyệt hiện tại — chỉ cần dùng file .json khi muốn chuyển sang máy khác hoặc gửi cho người khác.');
+    setStatus('Đã lưu ' + payload.checkedCount + ' mục vào file "' + fname + '" lúc ' + new Date().toLocaleTimeString('vi-VN') + '. Đây là bản sao lưu — dự án vẫn tự đồng bộ qua Internet như bình thường, không cần file này để hoạt động.');
   });
 
   document.getElementById('btnLoad').addEventListener('click', function() {
@@ -2150,12 +2305,15 @@
   });
 
   document.getElementById('btnReset').addEventListener('click', function() {
-    if (!confirm('Xoá hết tất cả các ô đã tích / trạng thái đã chọn trên trang này (kể cả tiến độ đã tự lưu trong trình duyệt)? Nếu chưa lưu ra file, tiến độ hiện tại sẽ mất — hãy bấm "Lưu tiến độ" trước nếu cần.')) return;
+    if (!confirm('Xoá hết tất cả các ô đã tích / trạng thái đã chọn của CẢ DỰ ÁN này (áp dụng cho MỌI người đang dùng chung dự án, không chỉ máy bạn)? Nếu chưa lưu ra file, dữ liệu sẽ mất — hãy bấm "Lưu tiến độ (file)" trước nếu cần.')) return;
     checkboxes.forEach(function(cb) { cb.checked = false; });
     selects.forEach(function(sel) { sel.value = ''; });
     updateProgress();
-    localClear();
-    setStatus('Đã xoá hết tick.');
+    if (CURRENT_PROJECT) {
+      try { window.localStorage.removeItem(CACHE_PREFIX + CURRENT_PROJECT.id); } catch (e) {}
+    }
+    remoteClearProject();
+    setStatus('Đã xoá hết tick cho cả dự án.');
   });
 
   // Clickable flow-diagram nodes: every mermaid node tagged with data-navto
@@ -2182,29 +2340,85 @@
 
   updateProgress();
 
-  // Restore progress on open, in priority order:
-  // 1) This browser's own auto-saved copy (localStorage) — works instantly for the same
-  //    person reopening the file on the same computer, no button needed.
-  // 2) A "tien-do-checklist.json" sitting next to this HTML file (same project folder) —
-  //    only works if the browser allows the page to read local sibling files. Chrome/Edge
-  //    opened via double-click usually BLOCKS this for security, so it silently does
-  //    nothing in that case — the manual "Tải tiến độ đã lưu" button always still works.
-  var restoredLocally = false;
-  var local = localLoad();
-  if (local && ((local.checkedIds && local.checkedIds.length) || (local.fieldValues && Object.keys(local.fieldValues).length))) {
-    applyProgressData(local, 'trình duyệt này (tự động)', false);
-    restoredLocally = true;
+  // ---- Project gate wiring: pick/create a project (name + access code) before
+  // anything syncs. On success this hides the overlay and starts loading +
+  // subscribing to that project's shared progress in Supabase. ----
+  var gateOverlay = document.getElementById('gateOverlay');
+  var gateNameEl = document.getElementById('gateProjectName');
+  var gateCodeEl = document.getElementById('gateAccessCode');
+  var gateWorkerEl = document.getElementById('gateWorkerName');
+  var gateBtn = document.getElementById('gateBtnEnter');
+  var gateErrorEl = document.getElementById('gateError');
+
+  function showGateError(msg) { gateErrorEl.textContent = msg; }
+  function setGateBusy(busy) {
+    gateBtn.disabled = busy;
+    gateBtn.textContent = busy ? 'Đang kết nối...' : 'Vào dự án';
   }
-  if (!restoredLocally) {
-    try {
-      fetch('./' + SAVE_FILENAME).then(function(r) {
-        return r && r.ok ? r.json() : null;
-      }).then(function(data) {
-        if (data && (data.checkedIds || data.fieldValues)) {
-          applyProgressData(data, 'file "' + SAVE_FILENAME + '" trong thư mục (tự động)', true);
-        }
-      }).catch(function() { /* silent: local fetch blocked, use manual load button */ });
-    } catch (e) { /* ignore */ }
+
+  function startProjectSync() {
+    setSyncStatus('', 'Đang tải dữ liệu dự án...');
+    var cache = loadProjectCache(CURRENT_PROJECT.id);
+    if (cache) { applyProgressData(cache, 'bộ nhớ tạm trên máy này', false); }
+    if (!sb) { setSyncStatus('err', 'Không tải được thư viện đồng bộ (kiểm tra kết nối Internet).'); return; }
+    loadInitialProgress().then(function() {
+      subscribeRealtime();
+    }).catch(function(err) {
+      setSyncStatus('err', 'Lỗi tải dữ liệu: ' + err.message);
+    });
+  }
+
+  function enterProject(name, code, worker, isAuto) {
+    if (!name || !code) {
+      if (!isAuto) showGateError('Vui lòng nhập đủ Tên dự án và Mã truy cập.');
+      return;
+    }
+    if (!sb) { showGateError('Không tải được thư viện kết nối (kiểm tra Internet rồi tải lại trang).'); return; }
+    setGateBusy(true);
+    showGateError('');
+    sb.rpc('get_or_create_project', {p_name: name, p_code: code}).then(function(res) {
+      setGateBusy(false);
+      if (res.error) {
+        var msg = (res.error.message || '').indexOf('WRONG_CODE') !== -1
+          ? ('Sai mã truy cập cho dự án "' + name + '".')
+          : ('Không kết nối được: ' + res.error.message);
+        showGateError(msg);
+        return;
+      }
+      CURRENT_PROJECT = {id: res.data, name: name, code: code};
+      if (worker) document.getElementById('workerName').value = worker;
+      saveLastProject(name, code, worker);
+      gateOverlay.style.display = 'none';
+      startProjectSync();
+    }).catch(function(err) {
+      setGateBusy(false);
+      showGateError('Lỗi kết nối mạng: ' + err.message);
+    });
+  }
+
+  gateBtn.addEventListener('click', function() {
+    enterProject(gateNameEl.value.trim(), gateCodeEl.value.trim(), gateWorkerEl.value.trim(), false);
+  });
+  [gateNameEl, gateCodeEl, gateWorkerEl].forEach(function(inp) {
+    inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') gateBtn.click(); });
+  });
+
+  document.getElementById('btnSwitchProject').addEventListener('click', function() {
+    if (realtimeChannel && sb) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
+    CURRENT_PROJECT = null;
+    clearLastProject();
+    gateNameEl.value = ''; gateCodeEl.value = ''; gateWorkerEl.value = '';
+    showGateError('');
+    setSyncStatus('', 'Chưa vào dự án');
+    gateOverlay.style.display = 'flex';
+  });
+
+  var lastProject = loadLastProject();
+  if (lastProject && lastProject.name && lastProject.code) {
+    gateNameEl.value = lastProject.name;
+    gateCodeEl.value = lastProject.code;
+    gateWorkerEl.value = lastProject.worker || '';
+    enterProject(lastProject.name, lastProject.code, lastProject.worker, true);
   }
 })();
 </script>
