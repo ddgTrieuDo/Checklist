@@ -323,6 +323,9 @@
   .dashtable .minibar-fill{height:100%;background:var(--green);}
   .dashtable tr.lagging td{background:#fdf3e8;}
   .dashtable tr.lagging .minibar-fill{background:#c99a2e;}
+  .dashtable tbody tr[data-navto]{cursor:pointer;}
+  .dashtable tbody tr[data-navto]:hover td{background:#e9f1f8;}
+  .dashtable tbody tr[data-navto].lagging:hover td{background:#fbe8d4;}
   .dashempty{font-size:12px;color:var(--sub);font-style:italic;}
   .answeredby{
     display:block;font-size:10px;font-style:italic;color:#2c8a4e;
@@ -3179,7 +3182,7 @@
       var stat = LAST_STATS.byPhase[p] || {checked: 0, total: 0};
       var pct = stat.total ? Math.round(stat.checked / stat.total * 100) : 0;
       var names = byPhaseAssignees[p] || [];
-      return '<tr class="' + (pct < 50 ? 'lagging' : '') + '">' +
+      return '<tr class="' + (pct < 50 ? 'lagging' : '') + '" data-navto="phase' + p + '" title="Click to jump to this phase">' +
         '<td>Phase ' + p + ' — ' + esc(PHASE_TITLES[p]) + '</td>' +
         '<td>' + barCell(stat.checked, stat.total) + '</td>' +
         '<td>' + (names.length ? esc(names.join(', ')) : '<span class="dashempty">unassigned</span>') + '</td>' +
@@ -3188,29 +3191,35 @@
     document.getElementById('dashByPhase').innerHTML =
       '<table class="dashtable"><thead><tr><th>Phase</th><th>Progress</th><th>Assigned To</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>';
 
-    // -- per person (shared items answered + individually-assigned items confirmed) --
+    // -- per person: how many of the items ASSIGNED to them (via item_assignees,
+    // driven by the panel "Assign to" field or the per-item "👤+" button) they
+    // have actually confirmed, i.e. "checked / assigned to them" — not the
+    // whole 1145-item checklist, since most items aren't assigned to any one
+    // person in particular. ----
     var byPerson = {};
-    Object.keys(itemMeta).forEach(function(id) {
-      var name = itemMeta[id].by || 'Anonymous';
-      byPerson[name] = (byPerson[name] || 0) + 1;
+    function personRec(name) {
+      byPerson[name] = byPerson[name] || {assigned: 0, checked: 0};
+      return byPerson[name];
+    }
+    Object.keys(itemAssignees).forEach(function(itemId) {
+      (itemAssignees[itemId] || []).forEach(function(a) {
+        var name = a.name || nameOf(a.user_id) || 'Anonymous';
+        var rec = personRec(name);
+        rec.assigned++;
+        var conf = itemConfirmations[itemId + '|' + a.user_id];
+        if (conf && conf.value) rec.checked++;
+      });
     });
-    Object.keys(itemConfirmations).forEach(function(key) {
-      var rec = itemConfirmations[key];
-      if (!rec || rec.value !== '1') return;
-      var name = nameOf(key.split('|')[1]);
-      byPerson[name] = (byPerson[name] || 0) + 1;
-    });
-    var people = Object.keys(byPerson).sort(function(a, b) { return byPerson[b] - byPerson[a]; });
+    var people = Object.keys(byPerson).sort(function(a, b) { return byPerson[b].checked - byPerson[a].checked; });
     if (!people.length) {
-      document.getElementById('dashByPerson').innerHTML = '<div class="dashempty">No one has checked any items yet.</div>';
+      document.getElementById('dashByPerson').innerHTML = '<div class="dashempty">No items have been individually assigned yet (use "Assign to" on a panel or the "👤+" button on an item).</div>';
     } else {
       var personRows = people.map(function(name) {
-        var count = byPerson[name];
-        var pct = TOTAL ? Math.round(count / TOTAL * 100) : 0;
-        return '<tr><td>' + esc(name) + '</td><td>' + barCell(count, TOTAL) + '</td></tr>';
+        var rec = byPerson[name];
+        return '<tr><td>' + esc(name) + '</td><td>' + barCell(rec.checked, rec.assigned) + '</td></tr>';
       }).join('');
       document.getElementById('dashByPerson').innerHTML =
-        '<table class="dashtable"><thead><tr><th>Person</th><th>Items checked / total checklist</th></tr></thead><tbody>' + personRows + '</tbody></table>';
+        '<table class="dashtable"><thead><tr><th>Person</th><th>Items checked / assigned to them</th></tr></thead><tbody>' + personRows + '</tbody></table>';
     }
 
     // -- per panel assignment + progress --
@@ -3220,7 +3229,7 @@
       var stat = LAST_STATS.byPanel[pid] || {checked: 0, total: 0};
       var pct = stat.total ? Math.round(stat.checked / stat.total * 100) : 0;
       var assignee = ASSIGNMENTS[pid] || '';
-      return '<tr class="' + (pct < 50 ? 'lagging' : '') + '">' +
+      return '<tr class="' + (pct < 50 ? 'lagging' : '') + '" data-navto="' + pid + '" title="Click to jump to this section">' +
         '<td>' + esc(meta.title) + '</td>' +
         '<td>' + (assignee ? esc(assignee) : '<span class="dashempty">unassigned</span>') + '</td>' +
         '<td>' + barCell(stat.checked, stat.total) + '</td>' +
@@ -3229,6 +3238,18 @@
     document.getElementById('dashByPanel').innerHTML =
       '<table class="dashtable"><thead><tr><th>Section</th><th>Assigned To</th><th>Progress</th></tr></thead><tbody>' + panelRows + '</tbody></table>';
   }
+  document.getElementById('dashboardOverlay').addEventListener('click', function(e) {
+    var row = e.target.closest('[data-navto]');
+    if (!row) return;
+    var targetId = row.getAttribute('data-navto');
+    var target = document.getElementById(targetId);
+    if (!target) return;
+    document.getElementById('dashboardOverlay').style.display = 'none';
+    setTimeout(function() {
+      target.scrollIntoView({behavior: 'smooth', block: 'start'});
+      flashHighlight(target);
+    }, 50);
+  });
   document.getElementById('btnDashboard').addEventListener('click', function() {
     renderDashboard();
     document.getElementById('dashboardOverlay').style.display = 'flex';
