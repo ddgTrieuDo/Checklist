@@ -2809,18 +2809,34 @@
     btn.addEventListener('click', function() {
       var scope = btn.getAttribute('data-scope');
       var target = btn.getAttribute('data-target');
-      var scoped = checkboxes.filter(function(cb) {
-        var inScope = scope === 'phase' ? cb.getAttribute('data-phase') === target : cb.getAttribute('data-panel') === target;
-        if (!inScope) return false;
-        var id = idOf(cb);
-        if (itemAssignees[id] && itemAssignees[id].length) return false; // assigned items: each person confirms their own line, bulk action skips them
-        return true;
+      var inScope = checkboxes.filter(function(cb) {
+        return scope === 'phase' ? cb.getAttribute('data-phase') === target : cb.getAttribute('data-panel') === target;
       });
-      var allChecked = scoped.length > 0 && scoped.every(function(cb) { return cb.checked; });
-      scoped.forEach(function(cb) { cb.checked = !allChecked; });
+      // Items nobody has individually claimed yet: bulk-toggle the shared checkbox as before.
+      var unassigned = inScope.filter(function(cb) {
+        var id = idOf(cb);
+        return !(itemAssignees[id] && itemAssignees[id].length);
+      });
+      // Items assigned to specific people: Check All can only confirm/unconfirm the
+      // CURRENT user's own line for items THEY were assigned — never someone else's,
+      // since that's still real per-person blocking, not a bulk override.
+      var mine = CURRENT_USER ? inScope.filter(function(cb) {
+        var assignees = itemAssignees[idOf(cb)];
+        return !!assignees && assignees.length > 0 && assignees.some(function(a) { return a.user_id === CURRENT_USER.id; });
+      }) : [];
+      var isMineDone = function(cb) {
+        var conf = itemConfirmations[idOf(cb) + '|' + CURRENT_USER.id];
+        return !!conf && conf.value === '1';
+      };
+      var allDone = (unassigned.length + mine.length) > 0
+        && unassigned.every(function(cb) { return cb.checked; })
+        && mine.every(isMineDone);
+      var newVal = !allDone;
+      unassigned.forEach(function(cb) { cb.checked = newVal; });
+      mine.forEach(function(cb) { saveItemConfirmation(idOf(cb), CURRENT_USER.id, newVal); });
       updateProgress();
       cacheProjectLocally();
-      remoteSaveMany(scoped);
+      if (unassigned.length) remoteSaveMany(unassigned);
     });
   });
 
