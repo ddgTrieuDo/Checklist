@@ -2272,6 +2272,35 @@
 
   var LAST_STATS = {overallChecked: 0, byPhase: {}, byPanel: {}};
 
+  // "Check All" only ever toggles: (a) checkboxes nobody has personally
+  // claimed, and (b) the CURRENT user's own confirmation on items assigned
+  // to them. It never touches status dropdowns (by design, to avoid
+  // picking a wrong status for someone) or other people's assigned items.
+  // The button's done/not-done state — and hence its "Check All" vs.
+  // "Uncheck All" label — must be computed over that exact same set,
+  // otherwise a panel that mixes dropdowns with checkboxes could never be
+  // considered "done" even after every checkbox is checked.
+  function checkAllScopeState(scope, target) {
+    var inScope = checkboxes.filter(function(cb) {
+      return scope === 'phase' ? cb.getAttribute('data-phase') === target : cb.getAttribute('data-panel') === target;
+    });
+    var unassigned = inScope.filter(function(cb) {
+      var id = idOf(cb);
+      return !(itemAssignees[id] && itemAssignees[id].length);
+    });
+    var mine = CURRENT_USER ? inScope.filter(function(cb) {
+      var assignees = itemAssignees[idOf(cb)];
+      return !!assignees && assignees.length > 0 && assignees.some(function(a) { return a.user_id === CURRENT_USER.id; });
+    }) : [];
+    var isMineDone = function(cb) {
+      var conf = itemConfirmations[idOf(cb) + '|' + CURRENT_USER.id];
+      return !!conf && conf.value === '1';
+    };
+    var total = unassigned.length + mine.length;
+    var allDone = total > 0 && unassigned.every(function(cb) { return cb.checked; }) && mine.every(isMineDone);
+    return {total: total, allDone: allDone};
+  }
+
   function updateProgress() {
     var overallChecked = 0;
     var byPhase = {};
@@ -2301,8 +2330,7 @@
     document.querySelectorAll('.checkallbtn').forEach(function(btn) {
       var scope = btn.getAttribute('data-scope');
       var target = btn.getAttribute('data-target');
-      var stat = scope === 'phase' ? byPhase[target] : byPanel[target];
-      var allDone = !!stat && stat.total > 0 && stat.checked === stat.total;
+      var allDone = checkAllScopeState(scope, target).allDone;
       btn.classList.toggle('done', allDone);
       if (scope === 'phase') {
         btn.textContent = allDone ? '☐ Uncheck All Phase' : '☑ Check All Phase';
@@ -2846,14 +2874,7 @@
         var assignees = itemAssignees[idOf(cb)];
         return !!assignees && assignees.length > 0 && assignees.some(function(a) { return a.user_id === CURRENT_USER.id; });
       }) : [];
-      var isMineDone = function(cb) {
-        var conf = itemConfirmations[idOf(cb) + '|' + CURRENT_USER.id];
-        return !!conf && conf.value === '1';
-      };
-      var allDone = (unassigned.length + mine.length) > 0
-        && unassigned.every(function(cb) { return cb.checked; })
-        && mine.every(isMineDone);
-      var newVal = !allDone;
+      var newVal = !checkAllScopeState(scope, target).allDone;
       unassigned.forEach(function(cb) { cb.checked = newVal; });
       mine.forEach(function(cb) { saveItemConfirmation(idOf(cb), CURRENT_USER.id, newVal); });
       updateProgress();
