@@ -2436,13 +2436,16 @@
   });
 
   // ---- "Giao cho" (panel-level, free-text names) also drives real per-person
-  // splitting for status-dropdown tables (Scope Check, Scope Boundary, ...):
-  // any typed name that matches a real logged-in project member's display
-  // name (case-insensitive) gets its own independent, RLS-enforced dropdown
-  // row for every dropdown item in that panel — reusing the same
-  // item_assignees/item_confirmations mechanism built for checkbox items.
-  // Names that don't match a real member yet get no row (shown as a hint
-  // instead), since real blocking needs a real account to tie to. ----
+  // splitting for EVERY trackable item in that panel — checkboxes and
+  // status-dropdown tables alike: any typed name that matches a real
+  // logged-in project member's display name (case-insensitive) gets its own
+  // independent, RLS-enforced row/line for every item in the panel — reusing
+  // the same item_assignees/item_confirmations mechanism as the per-item
+  // "👤+" button. Names that don't match a real member yet get no row (shown
+  // as a hint instead), since real blocking needs a real account to tie to.
+  // The "👤+" button on individual checkbox items still works as a manual
+  // override afterward, but re-editing this panel's "Giao cho" field will
+  // reset every item in the panel back to this list. ----
   function matchMemberByName(name) {
     var norm = (name || '').trim().toLowerCase();
     if (!norm) return null;
@@ -2453,18 +2456,18 @@
     }
     return null;
   }
-  function panelDropdownItemIds(panelId) {
-    return selects.filter(function(s) { return s.getAttribute('data-panel') === panelId; }).map(idOf);
+  function panelAssignableItemIds(panelId) {
+    return allEls.filter(function(el) { return el.getAttribute('data-panel') === panelId; }).map(idOf);
   }
   function renderUnmatchedHint(panelId, unmatched) {
     var el = document.querySelector('.assignmismatch[data-panel="' + panelId + '"]');
     if (!el) return;
     el.textContent = unmatched.length
-      ? ('⚠ Chưa khớp tài khoản: ' + unmatched.join(', ') + ' — người này cần đăng nhập vào dự án và tên hiển thị phải trùng khớp mới có dòng riêng trong các bảng trạng thái.')
+      ? ('⚠ Chưa khớp tài khoản: ' + unmatched.join(', ') + ' — người này cần đăng nhập vào dự án và tên hiển thị phải trùng khớp mới có dòng riêng.')
       : '';
   }
   function applyPanelDropdownAssignment(panelId, assigneeText) {
-    var itemIds = panelDropdownItemIds(panelId);
+    var itemIds = panelAssignableItemIds(panelId);
     var names = parseNames(assigneeText);
     var matched = [];
     var unmatched = [];
