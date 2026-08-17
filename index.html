@@ -162,6 +162,14 @@
   }
   .subheadtitle{flex:1;min-width:120px;}
   .subheadctrl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .assignrow{display:flex;align-items:center;gap:6px;margin:2px 0 8px;}
+  .assignlabel{font-size:10.5px;color:var(--sub);font-weight:600;white-space:nowrap;}
+  .assigninput{
+    flex:1;font-size:11px;border:1px solid var(--line);border-radius:6px;
+    padding:3px 8px;background:#fff;color:var(--ink);min-width:0;
+  }
+  .assigninput.filled{border-color:#cfe0f0;background:#eef4fb;color:#123b5e;font-weight:600;}
+  .phaseassignees{font-size:11px;color:var(--sub);margin-left:6px;}
   .checkallbtn{
     font-size:10.5px;font-weight:700;
     border:1px solid #cfe0f0;background:#fff;color:var(--accent);
@@ -252,6 +260,15 @@
   .syncstatus.err .dot{background:#c0392b;}
   .switchprojlink{font-size:11.5px;color:var(--accent);cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;}
   .onlineusers{font-size:11px;color:var(--sub);}
+  .dashtable{border-collapse:collapse;width:100%;font-size:12px;margin-bottom:4px;}
+  .dashtable th, .dashtable td{border:1px solid var(--line);padding:5px 8px;text-align:left;}
+  .dashtable th{background:#eef2f5;font-size:11px;}
+  .dashtable .barcell{display:flex;align-items:center;gap:6px;}
+  .dashtable .minibar{width:70px;height:7px;border-radius:5px;background:#e4e8ec;overflow:hidden;flex:none;}
+  .dashtable .minibar-fill{height:100%;background:var(--green);}
+  .dashtable tr.lagging td{background:#fdf3e8;}
+  .dashtable tr.lagging .minibar-fill{background:#c99a2e;}
+  .dashempty{font-size:12px;color:var(--sub);font-style:italic;}
   .answeredby{
     display:block;font-size:10px;font-style:italic;color:#2c8a4e;
     margin:1px 0 0 22px;
@@ -287,6 +304,26 @@
   </div>
 </div>
 
+<div class="gate-overlay" id="dashboardOverlay" style="display:none;align-items:flex-start;padding:40px 20px;">
+  <div class="gate-card" style="max-width:900px;max-height:85vh;overflow-y:auto;">
+    <h2 style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      📊 Tổng quan quản lý
+      <button type="button" class="toolbtn" id="btnCloseDashboard" style="padding:4px 10px;">✕ Đóng</button>
+    </h2>
+    <p>Dữ liệu tính theo những gì đã tải/đồng bộ trên trang này ngay lúc mở bảng này.</p>
+    <div id="dashProjectLine" style="font-size:13px;font-weight:600;margin-bottom:14px;"></div>
+
+    <h3 style="font-size:13px;margin:0 0 6px;">Theo Giai đoạn</h3>
+    <div id="dashByPhase" style="margin-bottom:18px;"></div>
+
+    <h3 style="font-size:13px;margin:0 0 6px;">Theo người thực hiện</h3>
+    <div id="dashByPerson" style="margin-bottom:18px;"></div>
+
+    <h3 style="font-size:13px;margin:0 0 6px;">Phân công theo từng mục</h3>
+    <div id="dashByPanel"></div>
+  </div>
+</div>
+
 <div class="navbar">
   <div class="navlinks">
     <a href="#top" class="navlink">↑ Tổng quan</a>
@@ -313,6 +350,7 @@
     <span class="savestatus" id="saveStatus"></span>
     <span class="syncstatus" id="syncStatus"><span class="dot"></span><span id="syncStatusText">Chưa vào dự án</span></span>
     <span class="onlineusers" id="onlineUsers"></span>
+    <button type="button" class="toolbtn" id="btnDashboard">📊 Tổng quan quản lý</button>
     <button type="button" class="switchprojlink" id="btnSwitchProject">Đổi dự án</button>
   </div>
 </div>
@@ -372,6 +410,7 @@
     <h2><span class="tag">GIAI ĐOẠN 01</span> Thiết lập dự án <span class="entitle">(Project Setup)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="01">☑ Tích hết Giai đoạn</button>
       <span class="itemcount" data-phasecount="01" data-total="135">0/135 đã hoàn thành</span>
+      <span class="phaseassignees" data-phaseassignees="01"></span>
     </h2>
     <div class="scroll-x">
       <div class="mermaid-rendered">
@@ -379,7 +418,7 @@
       </div>
     </div>
     <div class="items-wrap">
-      <div class="itempanel" id="p01-s01" data-panel="p01-s01"><div class="subhead"><span class="subheadtitle">1. Project Information – Lead/Checker _ Thông tin dự án – Lead/Checker</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s01">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+      <div class="itempanel" id="p01-s01" data-panel="p01-s01"><div class="subhead"><span class="subheadtitle">1. Project Information – Lead/Checker _ Thông tin dự án – Lead/Checker</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s01">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p01-s01" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s01-i001" data-phase="01" data-panel="p01-s01"> <span>Project Name (Tên dự án).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s01-i002" data-phase="01" data-panel="p01-s01"> <span>Project Number (Mã dự án).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -402,7 +441,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s01-i019" data-phase="01" data-panel="p01-s01"> <span>Construction REV starts with Number (REV Construction bắt đầu bằng số).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p01-s02" data-panel="p01-s02"><div class="subhead"><span class="subheadtitle">2. Scope Check – Lead/Checker _ Kiểm tra phạm vi công việc – Lead/Checker</span><span class="subheadctrl"><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p01-s02" data-panel="p01-s02"><div class="subhead"><span class="subheadtitle">2. Scope Check – Lead/Checker _ Kiểm tra phạm vi công việc – Lead/Checker</span><span class="subheadctrl"><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p01-s02" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <p class="itemnote">Xác định từng System (Hệ thống).</p>
 <p class="itemnote">Với từng hạng mục xác định.</p>
 <div class="scopetable-wrap"><table class="scopetable"><thead><tr><th class="scopetable-rowhead">Hệ thống / Hạng mục</th><th>Trạng thái</th></tr></thead><tbody>
@@ -435,7 +474,7 @@
 <tr><td class="scopetable-rowhead">Spool Drawing (Bản vẽ chế tạo spool).</td><td class="scopecell"><select class="chk statusdrop" data-id="p01-s02-r27" data-phase="01" data-panel="p01-s02"><option value="">-- Chưa chọn --</option><option value="inscope">IN SCOPE (Thuộc phạm vi công việc)</option><option value="outofscope">OUT OF SCOPE (Không thuộc phạm vi công việc)</option><option value="byothers">BY OTHERS (Do đơn vị khác thực hiện)</option><option value="pendingcustomerconfirmation">PENDING CUSTOMER CONFIRMATION (Đang chờ khách hàng xác nhận)</option></select><span class="answeredby" style="display:none"></span></td></tr>
 <tr><td class="scopetable-rowhead">BOM/Material List – Bill of Materials (Bảng vật tư).</td><td class="scopecell"><select class="chk statusdrop" data-id="p01-s02-r28" data-phase="01" data-panel="p01-s02"><option value="">-- Chưa chọn --</option><option value="inscope">IN SCOPE (Thuộc phạm vi công việc)</option><option value="outofscope">OUT OF SCOPE (Không thuộc phạm vi công việc)</option><option value="byothers">BY OTHERS (Do đơn vị khác thực hiện)</option><option value="pendingcustomerconfirmation">PENDING CUSTOMER CONFIRMATION (Đang chờ khách hàng xác nhận)</option></select><span class="answeredby" style="display:none"></span></td></tr>
 </tbody></table></div></div>
-<div class="itempanel" id="p01-s03" data-panel="p01-s03"><div class="subhead"><span class="subheadtitle">3. Scope Boundary _ Ranh giới phạm vi công việc</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s03">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p01-s03" data-panel="p01-s03"><div class="subhead"><span class="subheadtitle">3. Scope Boundary _ Ranh giới phạm vi công việc</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s03">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p01-s03" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <div class="scopetable-wrap"><table class="scopetable"><thead><tr><th class="scopetable-rowhead">Điểm ranh giới phạm vi</th><th>Trạng thái</th></tr></thead><tbody>
 <tr><td class="scopetable-rowhead">Start Point of Scope (Điểm bắt đầu phạm vi) rõ.</td><td class="scopecell"><select class="chk statusdrop" data-id="p01-s03-r01" data-phase="01" data-panel="p01-s03"><option value="">-- Chưa chọn --</option><option value="ro">Rõ ràng (Clear)</option><option value="chuaro">Chưa rõ (Not clear)</option></select><span class="answeredby" style="display:none"></span></td></tr>
 <tr><td class="scopetable-rowhead">End Point of Scope (Điểm kết thúc phạm vi) rõ.</td><td class="scopecell"><select class="chk statusdrop" data-id="p01-s03-r02" data-phase="01" data-panel="p01-s03"><option value="">-- Chưa chọn --</option><option value="ro">Rõ ràng (Clear)</option><option value="chuaro">Chưa rõ (Not clear)</option></select><span class="answeredby" style="display:none"></span></td></tr>
@@ -451,7 +490,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s03-i9001" data-phase="01" data-panel="p01-s03"> <span>Customer Question Sent (Đã gửi câu hỏi khách hàng).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s03-i9002" data-phase="01" data-panel="p01-s03"> <span>Status marked PENDING/HOLD (Đã đánh dấu PENDING/HOLD).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p01-s04" data-panel="p01-s04"><div class="subhead"><span class="subheadtitle">4. Input Documents _ Tài liệu đầu vào</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s04">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p01-s04" data-panel="p01-s04"><div class="subhead"><span class="subheadtitle">4. Input Documents _ Tài liệu đầu vào</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s04">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p01-s04" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s04-i001" data-phase="01" data-panel="p01-s04"> <span>Latest Plumbing Contract Drawing (Bản vẽ Contract Plumbing mới nhất).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s04-i002" data-phase="01" data-panel="p01-s04"> <span>Plumbing Specification (Đặc tả kỹ thuật Plumbing).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -478,7 +517,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s04-i023" data-phase="01" data-panel="p01-s04"> <span>Trimble/Layout Standard (Tiêu chuẩn Layout/Trimble).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p01-s05" data-panel="p01-s05"><div class="subhead"><span class="subheadtitle">5. Latest Information Check _ Kiểm tra thông tin mới nhất</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s05">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p01-s05" data-panel="p01-s05"><div class="subhead"><span class="subheadtitle">5. Latest Information Check _ Kiểm tra thông tin mới nhất</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s05">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p01-s05" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s05-i001" data-phase="01" data-panel="p01-s05"> <span>Drawing Revision (Revision bản vẽ) đúng.</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s05-i002" data-phase="01" data-panel="p01-s05"> <span>Drawing Issue Date (Ngày phát hành bản vẽ) đúng.</span></label><span class="answeredby" style="display:none"></span></li>
@@ -508,7 +547,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s05-ss1-i013" data-phase="01" data-panel="p01-s05"> <span>Clean Client Model (Xóa các View tạm/Test View do Detailer tạo trước khi giao model cho khách hàng, trừ View được yêu cầu giữ lại).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s05-ss1-i014" data-phase="01" data-panel="p01-s05"> <span>Daily Progress Update (Cuối ngày gửi Progress Update và các file yêu cầu cho khách hàng theo quy trình dự án).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p01-s06" data-panel="p01-s06"><div class="subhead"><span class="subheadtitle">6. Contract Review by Detailer _ Detailer đọc Contract</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s06">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p01-s06" data-panel="p01-s06"><div class="subhead"><span class="subheadtitle">6. Contract Review by Detailer _ Detailer đọc Contract</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s06">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p01-s06" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s06-i001" data-phase="01" data-panel="p01-s06"> <span>General Notes (Ghi chú chung).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s06-i002" data-phase="01" data-panel="p01-s06"> <span>Legend (Bảng ký hiệu).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -522,7 +561,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s06-i010" data-phase="01" data-panel="p01-s06"> <span>Related Specification (Specification liên quan).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p01-s07" data-panel="p01-s07"><div class="subhead"><span class="subheadtitle">7. Trace Design Intent _ Lần theo ý đồ thiết kế</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s07">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p01-s07" data-panel="p01-s07"><div class="subhead"><span class="subheadtitle">7. Trace Design Intent _ Lần theo ý đồ thiết kế</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s07">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p01-s07" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s07-i001" data-phase="01" data-panel="p01-s07"> <span>SAN – Sanitary (Thoát nước thải).<span class="iteminlinenote">Fixture → Branch → Main → Stack → Building Drain → Point of Connection (Thiết bị vệ sinh → ống nhánh → ống chính → ống đứng thoát nước → ống thoát chính của công trình → điểm kết nối).</span></span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s07-i002" data-phase="01" data-panel="p01-s07"> <span>Vent (Thông hơi).<span class="iteminlinenote">Fixture → Branch Vent → Vent Stack → VTR (Thiết bị vệ sinh → ống thông hơi nhánh → ống đứng thông hơi → ống thông hơi xuyên mái).</span></span></label><span class="answeredby" style="display:none"></span></li>
@@ -532,7 +571,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s07-i006" data-phase="01" data-panel="p01-s07"> <span>Storm (Thoát nước mưa).<span class="iteminlinenote">Roof Drain → Branch → Main → Leader → Discharge (Phễu thu nước mái → ống nhánh → ống chính → ống đứng thoát nước mưa → điểm xả).</span></span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p01-s07-i007" data-phase="01" data-panel="p01-s07"> <span>Overflow Storm (Thoát nước mưa tràn).<span class="iteminlinenote">Overflow Drain → Branch → Main → Leader → Discharge (Phễu thu nước tràn → ống nhánh → ống chính → ống đứng thoát nước mưa tràn → điểm xả).</span></span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p01-s08" data-panel="p01-s08"><div class="subhead"><span class="subheadtitle">8. Document Conflict Check _ Kiểm tra mâu thuẫn tài liệu</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s08">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p01-s08" data-panel="p01-s08"><div class="subhead"><span class="subheadtitle">8. Document Conflict Check _ Kiểm tra mâu thuẫn tài liệu</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p01-s08">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p01-s08" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <p class="itemnote">Kiểm.</p>
 <div class="scopetable-wrap"><table class="scopetable"><thead><tr><th class="scopetable-rowhead">Cặp đối chiếu tài liệu</th><th>Trạng thái</th></tr></thead><tbody>
 <tr><td class="scopetable-rowhead">Plan ↔ Riser (Mặt bằng ↔ Sơ đồ đứng).</td><td class="scopecell"><select class="chk statusdrop" data-id="p01-s08-r01" data-phase="01" data-panel="p01-s08"><option value="">-- Chưa chọn --</option><option value="khongxungdot">Không mâu thuẫn (No conflict)</option><option value="coxungdot">Có mâu thuẫn (Conflict found)</option></select><span class="answeredby" style="display:none"></span></td></tr>
@@ -562,6 +601,7 @@
     <h2><span class="tag">GIAI ĐOẠN 02</span> Dựng Model <span class="entitle">(Modeling)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="02">☑ Tích hết Giai đoạn</button>
       <span class="itemcount" data-phasecount="02" data-total="186">0/186 đã hoàn thành</span>
+      <span class="phaseassignees" data-phaseassignees="02"></span>
     </h2>
     <div class="scroll-x">
       <div class="mermaid-rendered">
@@ -569,7 +609,7 @@
       </div>
     </div>
     <div class="items-wrap">
-      <div class="itempanel" id="p02-s01" data-panel="p02-s01"><div class="subhead"><span class="subheadtitle">9. Model Setup _ Thiết lập Model</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+      <div class="itempanel" id="p02-s01" data-panel="p02-s01"><div class="subhead"><span class="subheadtitle">9. Model Setup _ Thiết lập Model</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s01" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s01-i001" data-phase="02" data-panel="p02-s01"> <span>Shared Coordinates (Hệ tọa độ dùng chung) đúng.</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s01-i002" data-phase="02" data-panel="p02-s01"> <span>Levels (Cao độ tầng) đúng.</span></label><span class="answeredby" style="display:none"></span></li>
@@ -587,7 +627,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s01-i014" data-phase="02" data-panel="p02-s01"> <span>Detailer không tự Move/Rotate Link (Không tự di chuyển/xoay model link).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p02-s02" data-panel="p02-s02"><div class="subhead"><span class="subheadtitle">10. Architecture Check _ Kiểm Architecture</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s02" data-panel="p02-s02"><div class="subhead"><span class="subheadtitle">10. Architecture Check _ Kiểm Architecture</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s02" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s02-i001" data-phase="02" data-panel="p02-s02"> <span>Room (Phòng).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s02-i002" data-phase="02" data-panel="p02-s02"> <span>Wall (Tường).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -606,7 +646,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s02-i015" data-phase="02" data-panel="p02-s02"> <span>Floor Elevation (Cao độ sàn).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p02-s03" data-panel="p02-s03"><div class="subhead"><span class="subheadtitle">11. Structure Check _ Kiểm Structure</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s03">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s03" data-panel="p02-s03"><div class="subhead"><span class="subheadtitle">11. Structure Check _ Kiểm Structure</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s03">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s03" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s03-i001" data-phase="02" data-panel="p02-s03"> <span>Beam (Dầm).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s03-i002" data-phase="02" data-panel="p02-s03"> <span>Joist (Dầm phụ / joist).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -627,7 +667,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s03-i017" data-phase="02" data-panel="p02-s03"> <span>Long Sloped Run (Tuyến ống dốc dài).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p02-s04" data-panel="p02-s04"><div class="subhead"><span class="subheadtitle">12. Fixture Check _ Kiểm thiết bị vệ sinh</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s04">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s04" data-panel="p02-s04"><div class="subhead"><span class="subheadtitle">12. Fixture Check _ Kiểm thiết bị vệ sinh</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s04">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s04" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s04-i001" data-phase="02" data-panel="p02-s04"> <span>Fixture Type (Loại thiết bị).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s04-i002" data-phase="02" data-panel="p02-s04"> <span>Location (Vị trí).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -641,7 +681,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s04-i010" data-phase="02" data-panel="p02-s04"> <span>Approved Fixture Information if required (Thông tin Fixture được chấp thuận nếu cần).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p02-s05" data-panel="p02-s05"><div class="subhead"><span class="subheadtitle">13. Equipment Check _ Kiểm Equipment</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s05">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s05" data-panel="p02-s05"><div class="subhead"><span class="subheadtitle">13. Equipment Check _ Kiểm Equipment</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s05">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s05" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s05-i001" data-phase="02" data-panel="p02-s05"> <span>Equipment Tag (Ký hiệu thiết bị).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s05-i002" data-phase="02" data-panel="p02-s05"> <span>Manufacturer/Model (Nhà sản xuất / Model thiết bị).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -666,7 +706,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s05-i16003" data-phase="02" data-panel="p02-s05"> <span>No Final Rough-In (Không chốt điểm chờ).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s05-i16004" data-phase="02" data-panel="p02-s05"> <span>No Fabrication Release (Không release fabrication).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p02-s06" data-panel="p02-s06"><div class="subhead"><span class="subheadtitle">14. Routing Strategy _ Chiến lược Routing</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s06">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s06" data-panel="p02-s06"><div class="subhead"><span class="subheadtitle">14. Routing Strategy _ Chiến lược Routing</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s06">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s06" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li class="itemnote-li">Trước khi chạy hàng loạt xác định.</li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s06-i002" data-phase="02" data-panel="p02-s06"> <span>Main Route (Tuyến ống chính).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -709,7 +749,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s06-ss1-i014" data-phase="02" data-panel="p02-s06"> <span>Mop Sink Drain Dimension Basis (Xác nhận với khách hàng vị trí Drain/Rough-In của Mop Sink được dimension từ Finish Wall hay Stud).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s06-ss1-i015" data-phase="02" data-panel="p02-s06"> <span>Bolt Set (Nếu dự án/Fabrication Standard yêu cầu Bolt Set, Detailer phải gắn ngay từ giai đoạn bắt đầu routing thay vì bổ sung cuối dự án).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p02-s07" data-panel="p02-s07"><div class="subhead"><span class="subheadtitle">15. Sanitary _ Hệ thống thoát nước thải</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s07">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s07" data-panel="p02-s07"><div class="subhead"><span class="subheadtitle">15. Sanitary _ Hệ thống thoát nước thải</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s07">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s07" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <p class="itemnote">Trace Fixture → Branch → Main → Stack → Building Drain (Lần theo thiết bị vệ sinh → ống nhánh → ống chính → ống đứng thoát nước → ống thoát chính công trình).</p>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s07-i1001" data-phase="02" data-panel="p02-s07"> <span>Size (Kích thước/đường kính ống) đúng.</span></label><span class="answeredby" style="display:none"></span></li>
@@ -731,7 +771,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s07-i1017" data-phase="02" data-panel="p02-s07"> <span>Downstream Elevation Feasible (Cao độ phía hạ lưu khả thi).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p02-s08" data-panel="p02-s08"><div class="subhead"><span class="subheadtitle">16. Vent _ Hệ thống thông hơi</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s08">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s08" data-panel="p02-s08"><div class="subhead"><span class="subheadtitle">16. Vent _ Hệ thống thông hơi</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s08">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s08" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <p class="itemnote">Trace Fixture → Branch Vent → Vent Stack → VTR (Lần theo thiết bị vệ sinh → ống thông hơi nhánh → ống đứng thông hơi → ống thông hơi xuyên mái).</p>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s08-i1001" data-phase="02" data-panel="p02-s08"> <span>Size (Kích thước ống) đúng.</span></label><span class="answeredby" style="display:none"></span></li>
@@ -746,7 +786,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s08-i1010" data-phase="02" data-panel="p02-s08"> <span>VTR Location Feasible (Vị trí VTR khả thi).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p02-s09" data-panel="p02-s09"><div class="subhead"><span class="subheadtitle">17. Cold Water _ Hệ thống nước lạnh</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s09">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s09" data-panel="p02-s09"><div class="subhead"><span class="subheadtitle">17. Cold Water _ Hệ thống nước lạnh</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s09">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s09" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <p class="itemnote">Source → Main → Riser → Branch → Fixture (Nguồn cấp → ống chính → ống đứng → ống nhánh → thiết bị).</p>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s09-i1001" data-phase="02" data-panel="p02-s09"> <span>Size (Kích thước ống).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -759,7 +799,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s09-i1008" data-phase="02" data-panel="p02-s09"> <span>Access (Không gian tiếp cận).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p02-s10" data-panel="p02-s10"><div class="subhead"><span class="subheadtitle">18. Hot Water _ Hệ thống nước nóng</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s10">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s10" data-panel="p02-s10"><div class="subhead"><span class="subheadtitle">18. Hot Water _ Hệ thống nước nóng</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s10">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s10" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <p class="itemnote">Water Heater → Main → Branch → Fixture (Bình nước nóng → ống chính → ống nhánh → thiết bị).</p>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s10-i1001" data-phase="02" data-panel="p02-s10"> <span>Size (Kích thước ống).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -772,7 +812,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s10-i1008" data-phase="02" data-panel="p02-s10"> <span>Access (Không gian tiếp cận).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p02-s11" data-panel="p02-s11"><div class="subhead"><span class="subheadtitle">19. Hot Water Return _ Hệ thống nước nóng hồi</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s11">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s11" data-panel="p02-s11"><div class="subhead"><span class="subheadtitle">19. Hot Water Return _ Hệ thống nước nóng hồi</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s11">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s11" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <p class="itemnote">End of Loop → Return → Pump/Water Heater (Cuối vòng tuần hoàn → đường hồi → bơm/bình nước nóng).</p>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s11-i1001" data-phase="02" data-panel="p02-s11"> <span>Continuous Loop (Vòng tuần hoàn liên tục).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -785,7 +825,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s11-i1008" data-phase="02" data-panel="p02-s11"> <span>No Missing HWR (Không bỏ sót HWR).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p02-s12" data-panel="p02-s12"><div class="subhead"><span class="subheadtitle">20. Storm _ Hệ thống thoát nước mưa</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s12">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s12" data-panel="p02-s12"><div class="subhead"><span class="subheadtitle">20. Storm _ Hệ thống thoát nước mưa</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s12">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s12" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <p class="itemnote">Roof Drain → Branch → Main → Leader → Discharge (Phễu thu nước mái → ống nhánh → ống chính → ống đứng thoát nước mưa → điểm xả).</p>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s12-i1001" data-phase="02" data-panel="p02-s12"> <span>Size (Kích thước ống).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -798,7 +838,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s12-i1008" data-phase="02" data-panel="p02-s12"> <span>Discharge Location (Vị trí xả).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p02-s13" data-panel="p02-s13"><div class="subhead"><span class="subheadtitle">21. Overflow Storm _ Hệ thống thoát nước mưa tràn</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s13">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s13" data-panel="p02-s13"><div class="subhead"><span class="subheadtitle">21. Overflow Storm _ Hệ thống thoát nước mưa tràn</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s13">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s13" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s13-i001" data-phase="02" data-panel="p02-s13"> <span>Trace separately from Primary Storm (Trace riêng với hệ Storm chính).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s13-i002" data-phase="02" data-panel="p02-s13"> <span>Correct Drain (Đúng phễu thu nước tràn).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -809,7 +849,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s13-i007" data-phase="02" data-panel="p02-s13"> <span>No Incorrect Connection to Primary Storm (Không nối nhầm vào hệ Storm chính).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p02-s14" data-panel="p02-s14"><div class="subhead"><span class="subheadtitle">22. Gas / Specialty _ Hệ Gas / hệ đặc biệt</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s14">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p02-s14" data-panel="p02-s14"><div class="subhead"><span class="subheadtitle">22. Gas / Specialty _ Hệ Gas / hệ đặc biệt</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p02-s14">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p02-s14" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li class="itemnote-li">Nếu thuộc Scope.</li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p02-s14-i002" data-phase="02" data-panel="p02-s14"> <span>Size (Kích thước).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -832,6 +872,7 @@
     <h2><span class="tag">GIAI ĐOẠN 03</span> Kỹ thuật &amp; Giá đỡ <span class="entitle">(Engineering &amp; Supports)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="03">☑ Tích hết Giai đoạn</button>
       <span class="itemcount" data-phasecount="03" data-total="87">0/87 đã hoàn thành</span>
+      <span class="phaseassignees" data-phaseassignees="03"></span>
     </h2>
     <div class="scroll-x">
       <div class="mermaid-rendered">
@@ -839,7 +880,7 @@
       </div>
     </div>
     <div class="items-wrap">
-      <div class="itempanel" id="p03-s01" data-panel="p03-s01"><div class="subhead"><span class="subheadtitle">27. Access / Maintenance _ Không gian tiếp cận / bảo trì</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+      <div class="itempanel" id="p03-s01" data-panel="p03-s01"><div class="subhead"><span class="subheadtitle">27. Access / Maintenance _ Không gian tiếp cận / bảo trì</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p03-s01" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s01-i001" data-phase="03" data-panel="p03-s01"> <span>Valve Access (Không gian tiếp cận van).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s01-i002" data-phase="03" data-panel="p03-s01"> <span>Cleanout Access (Không gian tiếp cận Cleanout).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -851,7 +892,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s01-i008" data-phase="03" data-panel="p03-s01"> <span>Access Panel if required (Cửa thăm nếu cần).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p03-s02" data-panel="p03-s02"><div class="subhead"><span class="subheadtitle">28. Insulation _ Bảo ôn / cách nhiệt</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p03-s02" data-panel="p03-s02"><div class="subhead"><span class="subheadtitle">28. Insulation _ Bảo ôn / cách nhiệt</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p03-s02" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s02-i001" data-phase="03" data-panel="p03-s02"> <span>Clash checked based on Pipe OD + Insulation (Kiểm va chạm theo đường kính ngoài ống + lớp bảo ôn).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s02-i002" data-phase="03" data-panel="p03-s02"> <span>Pipe-to-Pipe (Ống với ống).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -862,7 +903,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s02-i007" data-phase="03" data-panel="p03-s02"> <span>Shaft Clearance (Khoảng hở trong Shaft).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p03-s03" data-panel="p03-s03"><div class="subhead"><span class="subheadtitle">29. Hanger / Support _ Giá treo / hệ đỡ</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s03">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p03-s03" data-panel="p03-s03"><div class="subhead"><span class="subheadtitle">29. Hanger / Support _ Giá treo / hệ đỡ</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s03">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p03-s03" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s03-i001" data-phase="03" data-panel="p03-s03"> <span>Hanger Type (Loại hanger).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s03-i002" data-phase="03" data-panel="p03-s03"> <span>Spacing (Khoảng cách hanger).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -885,7 +926,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s03-ss1-i004" data-phase="03" data-panel="p03-s03"> <span>Metal Roof / Non-Concrete Roof (Không gắn hanger trực tiếp vào mái tôn/non-structural roof; support phải liên kết vào Beam/Joist/Structure được chấp thuận).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s03-ss1-i005" data-phase="03" data-panel="p03-s03"> <span>Riser Clamp (Ống đứng xuyên sàn phải kiểm và bố trí Riser Clamp/Support theo yêu cầu dự án).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p03-s04" data-panel="p03-s04"><div class="subhead"><span class="subheadtitle">30. Penetration Strategy _ Chiến lược Sleeve / lỗ xuyên</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s04">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p03-s04" data-panel="p03-s04"><div class="subhead"><span class="subheadtitle">30. Penetration Strategy _ Chiến lược Sleeve / lỗ xuyên</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s04">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p03-s04" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li class="itemnote-li">Phân loại.</li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s04-i002" data-phase="03" data-panel="p03-s04"> <span>Deck Sleeve (Sleeve xuyên Deck).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -897,7 +938,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s04-i008" data-phase="03" data-panel="p03-s04"> <span>Core Drill (Khoan core).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p03-s05" data-panel="p03-s05"><div class="subhead"><span class="subheadtitle">31. Deck / Floor Sleeve _ Sleeve xuyên Deck / sàn</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s05">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p03-s05" data-panel="p03-s05"><div class="subhead"><span class="subheadtitle">31. Deck / Floor Sleeve _ Sleeve xuyên Deck / sàn</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s05">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p03-s05" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s05-i001" data-phase="03" data-panel="p03-s05"> <span>Sleeve ID (Mã Sleeve).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s05-i002" data-phase="03" data-panel="p03-s05"> <span>Level (Tầng).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -916,7 +957,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s05-i015" data-phase="03" data-panel="p03-s05"> <span>No Clash with Beam/Joist/Column (Không va chạm dầm/joist/cột).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p03-s06" data-panel="p03-s06"><div class="subhead"><span class="subheadtitle">32. Wall / Roof Sleeve / Opening _ Sleeve tường / mái / Opening</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s06">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p03-s06" data-panel="p03-s06"><div class="subhead"><span class="subheadtitle">32. Wall / Roof Sleeve / Opening _ Sleeve tường / mái / Opening</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s06">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p03-s06" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s06-i001" data-phase="03" data-panel="p03-s06"> <span>Wall Type (Loại tường).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s06-i002" data-phase="03" data-panel="p03-s06"> <span>Wall Thickness (Chiều dày tường).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -933,7 +974,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s06-i013" data-phase="03" data-panel="p03-s06"> <span>Structural Approval if required (Chấp thuận kết cấu nếu cần).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p03-s07" data-panel="p03-s07"><div class="subhead"><span class="subheadtitle">33. Core Drill _ Khoan Core</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s07">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p03-s07" data-panel="p03-s07"><div class="subhead"><span class="subheadtitle">33. Core Drill _ Khoan Core</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s07">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p03-s07" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s07-i001" data-phase="03" data-panel="p03-s07"> <span>Existing Structure (Kết cấu hiện hữu).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s07-i002" data-phase="03" data-panel="p03-s07"> <span>Core Size (Kích thước lỗ Core).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -946,7 +987,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s07-i009" data-phase="03" data-panel="p03-s07"> <span>Field Verification (Xác minh hiện trường).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p03-s08" data-panel="p03-s08"><div class="subhead"><span class="subheadtitle">34. Deck Insert _ Insert chôn sẵn trong Deck</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s08">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p03-s08" data-panel="p03-s08"><div class="subhead"><span class="subheadtitle">34. Deck Insert _ Insert chôn sẵn trong Deck</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p03-s08">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p03-s08" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s08-i001" data-phase="03" data-panel="p03-s08"> <span>Pipe Routing Stable (Routing ống ổn định).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p03-s08-i002" data-phase="03" data-panel="p03-s08"> <span>Hanger Layout Stable (Layout hanger ổn định).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -969,6 +1010,7 @@
     <h2><span class="tag">GIAI ĐOẠN 04</span> Phối hợp <span class="entitle">(Coordination)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="04">☑ Tích hết Giai đoạn</button>
       <span class="itemcount" data-phasecount="04" data-total="74">0/74 đã hoàn thành</span>
+      <span class="phaseassignees" data-phaseassignees="04"></span>
     </h2>
     <div class="scroll-x">
       <div class="mermaid-rendered">
@@ -976,7 +1018,7 @@
       </div>
     </div>
     <div class="items-wrap">
-      <div class="itempanel" id="p04-s01" data-panel="p04-s01"><div class="subhead"><span class="subheadtitle">23. Elevation Check _ Kiểm cao độ</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p04-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+      <div class="itempanel" id="p04-s01" data-panel="p04-s01"><div class="subhead"><span class="subheadtitle">23. Elevation Check _ Kiểm cao độ</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p04-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p04-s01" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li class="itemnote-li">Kiểm bằng.</li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p04-s01-i002" data-phase="04" data-panel="p04-s01"> <span>Plan (Mặt bằng).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -998,7 +1040,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p04-s01-i018" data-phase="04" data-panel="p04-s01"> <span>Access Space (Không gian tiếp cận).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p04-s02" data-panel="p04-s02"><div class="subhead"><span class="subheadtitle">24. Coordination _ Phối hợp</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p04-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p04-s02" data-panel="p04-s02"><div class="subhead"><span class="subheadtitle">24. Coordination _ Phối hợp</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p04-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p04-s02" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p04-s02-i001" data-phase="04" data-panel="p04-s02"> <span>Structure (Kết cấu).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p04-s02-i002" data-phase="04" data-panel="p04-s02"> <span>HVAC.</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1019,7 +1061,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p04-s02-i017" data-phase="04" data-panel="p04-s02"> <span>Prepare Proposed Solution before asking Customer (Có phương án đề xuất trước khi hỏi khách hàng).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p04-s03" data-panel="p04-s03"><div class="subhead"><span class="subheadtitle">25. Customer Issue / RFI _ Issue / RFI gửi khách hàng</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p04-s03">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p04-s03" data-panel="p04-s03"><div class="subhead"><span class="subheadtitle">25. Customer Issue / RFI _ Issue / RFI gửi khách hàng</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p04-s03">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p04-s03" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <p class="itemnote">Mỗi Issue phải có.</p>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p04-s03-i1001" data-phase="04" data-panel="p04-s03"> <span>Project (Dự án).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1054,7 +1096,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p04-s03-ss1-i007" data-phase="04" data-panel="p04-s03"> <span>RFI Wording (RFI phải mô tả điều kiện kỹ thuật, xung đột và phương án đề xuất; tránh lập luận dựa trên “tiết kiệm tiền/chi phí” nếu đó không phải nội dung kỹ thuật được yêu cầu).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p04-s03-ss1-i008" data-phase="04" data-panel="p04-s03"> <span>Viewpoint Status (Issue đã giải quyết ghi DONE/CLOSED theo chuẩn dự án; Issue chưa giải quyết phải mô tả rõ vấn đề/thông tin còn thiếu thay vì chỉ ghi “Pending”).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p04-s04" data-panel="p04-s04"><div class="subhead"><span class="subheadtitle">26. Customer Response _ Xử lý phản hồi khách hàng</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p04-s04">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p04-s04" data-panel="p04-s04"><div class="subhead"><span class="subheadtitle">26. Customer Response _ Xử lý phản hồi khách hàng</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p04-s04">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p04-s04" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p04-s04-i001" data-phase="04" data-panel="p04-s04"> <span>Response Logged (Đã ghi nhận phản hồi).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p04-s04-i002" data-phase="04" data-panel="p04-s04"> <span>Date (Ngày nhận).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1081,6 +1123,7 @@
     <h2><span class="tag">GIAI ĐOẠN 05</span> Trimble / Layout hiện trường <span class="entitle">(Trimble / Field Layout)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="05">☑ Tích hết Giai đoạn</button>
       <span class="itemcount" data-phasecount="05" data-total="65">0/65 đã hoàn thành</span>
+      <span class="phaseassignees" data-phaseassignees="05"></span>
     </h2>
     <div class="scroll-x">
       <div class="mermaid-rendered">
@@ -1088,7 +1131,7 @@
       </div>
     </div>
     <div class="items-wrap">
-      <div class="itempanel" id="p05-s01" data-panel="p05-s01"><div class="subhead"><span class="subheadtitle">35. Trimble / Field Layout Point _ Điểm Trimble / Layout hiện trường</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p05-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+      <div class="itempanel" id="p05-s01" data-panel="p05-s01"><div class="subhead"><span class="subheadtitle">35. Trimble / Field Layout Point _ Điểm Trimble / Layout hiện trường</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p05-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p05-s01" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s01-i001" data-phase="05" data-panel="p05-s01"> <span>Point ID (Mã điểm).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s01-i002" data-phase="05" data-panel="p05-s01"> <span>Point Type (Loại điểm).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1113,7 +1156,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s01-ss1-i002" data-phase="05" data-panel="p05-s01"> <span>GC Coordination (Chủ động liên hệ khách hàng/GC để yêu cầu Control Points; nếu chưa nhận được phải follow up theo tiến độ dự án).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s01-ss1-i003" data-phase="05" data-panel="p05-s01"> <span>Control Point Record (Lưu lại nguồn, ngày nhận và revision của Control Point dùng để xuất Trimble).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p05-s02" data-panel="p05-s02"><div class="subhead"><span class="subheadtitle">36. Underground Stub-Up _ Điểm ống ngầm chờ lên</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p05-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p05-s02" data-panel="p05-s02"><div class="subhead"><span class="subheadtitle">36. Underground Stub-Up _ Điểm ống ngầm chờ lên</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p05-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p05-s02" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s02-i001" data-phase="05" data-panel="p05-s02"> <span>System (Hệ thống).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s02-i002" data-phase="05" data-panel="p05-s02"> <span>Size (Kích thước ống).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1128,7 +1171,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s02-i011" data-phase="05" data-panel="p05-s02"> <span>Field Tolerance (Dung sai hiện trường).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p05-s03" data-panel="p05-s03"><div class="subhead"><span class="subheadtitle">37. Fixture / Equipment Rough-In _ Điểm chờ Fixture / Equipment</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p05-s03">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p05-s03" data-panel="p05-s03"><div class="subhead"><span class="subheadtitle">37. Fixture / Equipment Rough-In _ Điểm chờ Fixture / Equipment</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p05-s03">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p05-s03" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s03-i001" data-phase="05" data-panel="p05-s03"> <span>Approved Fixture/Submittal (Fixture/Submittal đã được chấp thuận).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s03-i002" data-phase="05" data-panel="p05-s03"> <span>Centerline (Tim).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1141,7 +1184,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s03-i009" data-phase="05" data-panel="p05-s03"> <span>Service Clearance (Khoảng không gian bảo trì).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p05-s04" data-panel="p05-s04"><div class="subhead"><span class="subheadtitle">38. Field Layout Release _ Release Layout hiện trường</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p05-s04">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p05-s04" data-panel="p05-s04"><div class="subhead"><span class="subheadtitle">38. Field Layout Release _ Release Layout hiện trường</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p05-s04">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p05-s04" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li class="itemnote-li">Lead/Checker.</li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s04-i002" data-phase="05" data-panel="p05-s04"> <span>Latest Contract (Contract mới nhất).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1160,7 +1203,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s04-i015" data-phase="05" data-panel="p05-s04"> <span>Correct Revision (Đúng Revision).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p05-s05" data-panel="p05-s05"><div class="subhead"><span class="subheadtitle">39. Pour Schedule Control _ Kiểm soát tiến độ đổ bê tông</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p05-s05">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p05-s05" data-panel="p05-s05"><div class="subhead"><span class="subheadtitle">39. Pour Schedule Control _ Kiểm soát tiến độ đổ bê tông</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p05-s05">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p05-s05" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s05-i001" data-phase="05" data-panel="p05-s05"> <span>Pour Area (Khu vực đổ bê tông).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p05-s05-i002" data-phase="05" data-panel="p05-s05"> <span>Pour Date (Ngày đổ bê tông).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1186,6 +1229,7 @@
     <h2><span class="tag">GIAI ĐOẠN 06</span> Spool hoá <span class="entitle">(Spooling)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="06">☑ Tích hết Giai đoạn</button>
       <span class="itemcount" data-phasecount="06" data-total="68">0/68 đã hoàn thành</span>
+      <span class="phaseassignees" data-phaseassignees="06"></span>
     </h2>
     <div class="scroll-x">
       <div class="mermaid-rendered">
@@ -1193,7 +1237,7 @@
       </div>
     </div>
     <div class="items-wrap">
-      <div class="itempanel" id="p06-s01" data-panel="p06-s01"><div class="subhead"><span class="subheadtitle">50. Spool Ready _ Xác nhận đủ điều kiện làm Spool</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+      <div class="itempanel" id="p06-s01" data-panel="p06-s01"><div class="subhead"><span class="subheadtitle">50. Spool Ready _ Xác nhận đủ điều kiện làm Spool</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p06-s01" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s01-i001" data-phase="06" data-panel="p06-s01"> <span>Current IFC or Written Authorization (IFC hiện hành hoặc chấp thuận bằng văn bản).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s01-i002" data-phase="06" data-panel="p06-s01"> <span>Routing Stable (Routing ổn định).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1210,7 +1254,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s01-i013" data-phase="06" data-panel="p06-s01"> <span>No HOLD (Không HOLD).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p06-s02" data-panel="p06-s02"><div class="subhead"><span class="subheadtitle">51. Spool Planning / Break _ Lập kế hoạch / chia Spool</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p06-s02" data-panel="p06-s02"><div class="subhead"><span class="subheadtitle">51. Spool Planning / Break _ Lập kế hoạch / chia Spool</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p06-s02" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s02-i001" data-phase="06" data-panel="p06-s02"> <span>Fabrication Considered (Đã xét khả năng chế tạo).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s02-i002" data-phase="06" data-panel="p06-s02"> <span>Transportation Considered (Đã xét vận chuyển).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1223,7 +1267,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s02-i009" data-phase="06" data-panel="p06-s02"> <span>Field Connection Planned (Đã xác định Field Connection).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p06-s03" data-panel="p06-s03"><div class="subhead"><span class="subheadtitle">52. Field Connection _ Điểm kết nối tại hiện trường</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s03">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p06-s03" data-panel="p06-s03"><div class="subhead"><span class="subheadtitle">52. Field Connection _ Điểm kết nối tại hiện trường</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s03">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p06-s03" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s03-i001" data-phase="06" data-panel="p06-s03"> <span>Accessible (Có thể tiếp cận).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s03-i002" data-phase="06" data-panel="p06-s03"> <span>Working Space Available (Có đủ không gian thao tác).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1236,7 +1280,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s03-i009" data-phase="06" data-panel="p06-s03"> <span>Compatible with Installation Sequence (Phù hợp trình tự lắp đặt).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p06-s04" data-panel="p06-s04"><div class="subhead"><span class="subheadtitle">53. Spool Drawing _ Bản vẽ Spool</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s04">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p06-s04" data-panel="p06-s04"><div class="subhead"><span class="subheadtitle">53. Spool Drawing _ Bản vẽ Spool</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s04">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p06-s04" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s04-i001" data-phase="06" data-panel="p06-s04"> <span>Spool ID (Mã Spool).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s04-i002" data-phase="06" data-panel="p06-s04"> <span>System (Hệ thống).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1258,7 +1302,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s04-ss1-i001" data-phase="06" data-panel="p06-s04"> <span>Hidden Line Print (Khi xuất/in Spool, sử dụng Hidden Line hoặc chế độ hiển thị theo Fabrication Standard; không dùng Wireframe nếu làm bản vẽ khó đọc).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s04-ss1-i002" data-phase="06" data-panel="p06-s04"> <span>Additional Views (Spool phức tạp/khó nhìn phải bổ sung View/Section/Detail để Fabricator và Installer hiểu đầy đủ hình học).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p06-s05" data-panel="p06-s05"><div class="subhead"><span class="subheadtitle">54. Spool Dimension _ Dimension bản vẽ Spool</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s05">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p06-s05" data-panel="p06-s05"><div class="subhead"><span class="subheadtitle">54. Spool Dimension _ Dimension bản vẽ Spool</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s05">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p06-s05" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s05-i001" data-phase="06" data-panel="p06-s05"> <span>Cut Length (Chiều dài cắt).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s05-i002" data-phase="06" data-panel="p06-s05"> <span>Overall Length (Chiều dài tổng).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1271,7 +1315,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s05-i009" data-phase="06" data-panel="p06-s05"> <span>Fabricator does not measure from Scale (Fabricator không phải đo từ tỷ lệ bản vẽ).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p06-s06" data-panel="p06-s06"><div class="subhead"><span class="subheadtitle">56. Spool QC / Release _ QC Spool / Release Fabrication</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s06">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p06-s06" data-panel="p06-s06"><div class="subhead"><span class="subheadtitle">56. Spool QC / Release _ QC Spool / Release Fabrication</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p06-s06">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p06-s06" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s06-i001" data-phase="06" data-panel="p06-s06"> <span>Fabricatable (Có thể chế tạo).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p06-s06-i002" data-phase="06" data-panel="p06-s06"> <span>Transportable (Có thể vận chuyển).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1298,6 +1342,7 @@
     <h2><span class="tag">GIAI ĐOẠN 07</span> BOM / Báo cáo <span class="entitle">(BOM / Reports)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="07">☑ Tích hết Giai đoạn</button>
       <span class="itemcount" data-phasecount="07" data-total="46">0/46 đã hoàn thành</span>
+      <span class="phaseassignees" data-phaseassignees="07"></span>
     </h2>
     <div class="scroll-x">
       <div class="mermaid-rendered">
@@ -1305,7 +1350,7 @@
       </div>
     </div>
     <div class="items-wrap">
-      <div class="itempanel" id="p07-s01" data-panel="p07-s01"><div class="subhead"><span class="subheadtitle">55. BOM – Bill of Materials _ Bảng vật tư</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p07-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+      <div class="itempanel" id="p07-s01" data-panel="p07-s01"><div class="subhead"><span class="subheadtitle">55. BOM – Bill of Materials _ Bảng vật tư</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p07-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p07-s01" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p07-s01-i001" data-phase="07" data-panel="p07-s01"> <span>Pipe (Ống).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p07-s01-i002" data-phase="07" data-panel="p07-s01"> <span>Size (Kích thước).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1322,7 +1367,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p07-s01-i013" data-phase="07" data-panel="p07-s01"> <span>Geometry ↔ BOM Match (Hình học Spool ↔ BOM khớp).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p07-s02" data-panel="p07-s02"><div class="subhead"><span class="subheadtitle">59. Pending / Hold Register _ Danh sách Pending / Hold</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p07-s02">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p07-s02" data-panel="p07-s02"><div class="subhead"><span class="subheadtitle">59. Pending / Hold Register _ Danh sách Pending / Hold</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p07-s02">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p07-s02" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p07-s02-i001" data-phase="07" data-panel="p07-s02"> <span>Track (Theo dõi).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p07-s02-i002" data-phase="07" data-panel="p07-s02"> <span>PENDING CUSTOMER (Đang chờ khách hàng).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1353,7 +1398,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p07-s02-i027" data-phase="07" data-panel="p07-s02"> <span>Close Date (Ngày đóng Issue).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p07-s03" data-panel="p07-s03"><div class="subhead"><span class="subheadtitle">60. Superseded File Control _ Quản lý file đã bị thay thế</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p07-s03">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p07-s03" data-panel="p07-s03"><div class="subhead"><span class="subheadtitle">60. Superseded File Control _ Quản lý file đã bị thay thế</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p07-s03">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p07-s03" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p07-s03-i001" data-phase="07" data-panel="p07-s03"> <span>Old IFR marked Superseded (IFR cũ được đánh dấu Superseded).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p07-s03-i002" data-phase="07" data-panel="p07-s03"> <span>Old IFA marked Superseded (IFA cũ được đánh dấu Superseded).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1372,6 +1417,7 @@
     <h2><span class="tag">GIAI ĐOẠN 08</span> Bản vẽ Shop <span class="entitle">(Shop Drawings)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="08">☑ Tích hết Giai đoạn</button>
       <span class="itemcount" data-phasecount="08" data-total="335">0/335 đã hoàn thành</span>
+      <span class="phaseassignees" data-phaseassignees="08"></span>
     </h2>
     <div class="scroll-x">
       <div class="mermaid-rendered">
@@ -1379,7 +1425,7 @@
       </div>
     </div>
     <div class="items-wrap">
-      <div class="itempanel" id="p08-s01" data-panel="p08-s01"><div class="subhead"><span class="subheadtitle">44. SHOP PIPE – IFR – ISSUE FOR REVIEW _ SHOP PIPE – PHÁT HÀNH ĐỂ KHÁCH HÀNG XEM XÉT</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s01">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+      <div class="itempanel" id="p08-s01" data-panel="p08-s01"><div class="subhead"><span class="subheadtitle">44. SHOP PIPE – IFR – ISSUE FOR REVIEW _ SHOP PIPE – PHÁT HÀNH ĐỂ KHÁCH HÀNG XEM XÉT</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s01">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p08-s01" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s01-i001" data-phase="08" data-panel="p08-s01"> <span>IFR là bộ Shop Pipe phát hành để khách hàng review, comment và xác nhận hướng triển khai. Đây chưa phải bản dùng cho Construction hoặc Fabrication.</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
@@ -1437,7 +1483,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s01-ss3-i005" data-phase="08" data-panel="p08-s01"> <span>Filename follows Project Naming Convention (Tên file đúng Naming Convention của dự án).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s01-ss3-i006" data-phase="08" data-panel="p08-s01"> <span>Transmittal identifies Issue for Review (Transmittal ghi đúng Issue for Review).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p08-s02" data-panel="p08-s02"><div class="subhead"><span class="subheadtitle">45. IFR CUSTOMER COMMENTS _ XỬ LÝ COMMENT KHÁCH HÀNG SAU IFR</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p08-s02" data-panel="p08-s02"><div class="subhead"><span class="subheadtitle">45. IFR CUSTOMER COMMENTS _ XỬ LÝ COMMENT KHÁCH HÀNG SAU IFR</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p08-s02" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 
 <div class="subsubhead">45.1. Receive / Log Comments – Nhận và ghi nhận Comment</div>
 <ul class="itemlist">
@@ -1486,7 +1532,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s02-ss4-i004" data-phase="08" data-panel="p08-s02"> <span>Comment Status Updated (Trạng thái Comment đã cập nhật).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s02-ss4-i005" data-phase="08" data-panel="p08-s02"> <span>Comment Closed only after all impacts are resolved (Chỉ đóng Comment sau khi tất cả ảnh hưởng đã được xử lý).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p08-s03" data-panel="p08-s03"><div class="subhead"><span class="subheadtitle">46. IFA – ISSUE FOR APPROVAL – SHOP PIPE _ SHOP PIPE – PHÁT HÀNH ĐỂ PHÊ DUYỆT</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s03">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p08-s03" data-panel="p08-s03"><div class="subhead"><span class="subheadtitle">46. IFA – ISSUE FOR APPROVAL – SHOP PIPE _ SHOP PIPE – PHÁT HÀNH ĐỂ PHÊ DUYỆT</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s03">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p08-s03" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s03-i001" data-phase="08" data-panel="p08-s03"> <span>IFA là bộ Shop Pipe được gửi để khách hàng / Engineer of Record phê duyệt trước khi chuyển sang Construction.</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
@@ -1535,7 +1581,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s03-ss3-i004" data-phase="08" data-panel="p08-s03"> <span>Transmittal = Issue for Approval.</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s03-ss3-i005" data-phase="08" data-panel="p08-s03"> <span>IFA PDF Opened and Checked before Issue (PDF IFA đã được mở và kiểm trước khi phát hành).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p08-s04" data-panel="p08-s04"><div class="subhead"><span class="subheadtitle">47. APPROVAL RESPONSE _ PHẢN HỒI PHÊ DUYỆT</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s04">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p08-s04" data-panel="p08-s04"><div class="subhead"><span class="subheadtitle">47. APPROVAL RESPONSE _ PHẢN HỒI PHÊ DUYỆT</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s04">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p08-s04" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 
 <div class="subsubhead">47.1. Approval Status – Trạng thái phê duyệt</div>
 <p class="itemnote">Xác định đúng trạng thái khách hàng trả về.</p>
@@ -1577,7 +1623,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s04-ss4-i004" data-phase="08" data-panel="p08-s04"> <span>REVISE AND RESUBMIT → Revise and issue IFA again (Sửa và phát hành lại IFA).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s04-ss4-i005" data-phase="08" data-panel="p08-s04"> <span>REJECTED → HOLD affected work and resolve with Customer (HOLD phần bị ảnh hưởng và làm rõ với khách hàng).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p08-s05" data-panel="p08-s05"><div class="subhead"><span class="subheadtitle">48. IFC – ISSUE FOR CONSTRUCTION – SHOP PIPE _ SHOP PIPE – PHÁT HÀNH ĐỂ THI CÔNG</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s05">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p08-s05" data-panel="p08-s05"><div class="subhead"><span class="subheadtitle">48. IFC – ISSUE FOR CONSTRUCTION – SHOP PIPE _ SHOP PIPE – PHÁT HÀNH ĐỂ THI CÔNG</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s05">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p08-s05" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s05-i001" data-phase="08" data-panel="p08-s05"> <span>IFC là bộ Shop Pipe đã hoàn thiện và được phát hành để sử dụng cho Construction.</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
@@ -1642,7 +1688,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s05-ss4-i004" data-phase="08" data-panel="p08-s05"> <span>Transmittal = Issue for Construction.</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s05-ss4-i005" data-phase="08" data-panel="p08-s05"> <span>Current IFC clearly distinguishable from previous IFR/IFA sets (IFC hiện hành được phân biệt rõ với IFR/IFA cũ).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul></div>
-<div class="itempanel" id="p08-s06" data-panel="p08-s06"><div class="subhead"><span class="subheadtitle">49. PDF / FILENAME / TRANSMITTAL – SHOP PIPE _ KIỂM PDF / TÊN FILE / TRANSMITTAL – SHOP PIPE</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s06">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p08-s06" data-panel="p08-s06"><div class="subhead"><span class="subheadtitle">49. PDF / FILENAME / TRANSMITTAL – SHOP PIPE _ KIỂM PDF / TÊN FILE / TRANSMITTAL – SHOP PIPE</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s06">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p08-s06" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 
 <div class="subsubhead">49.1. PDF Visual Check – Kiểm PDF thực tế</div>
 <ul class="itemlist">
@@ -1698,7 +1744,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s06-ss3-i011" data-phase="08" data-panel="p08-s06"> <span>Attached Files Match Transmittal (File đính kèm khớp với Transmittal).</span></label><span class="answeredby" style="display:none"></span></li>
 <li class="itemnote-li">FILE NAME ↔ DRAWING STATUS ↔ REVISION ↔ TRANSMITTAL.</li>
 </ul></div>
-<div class="itempanel" id="p08-s07" data-panel="p08-s07"><div class="subhead"><span class="subheadtitle">50. SHOP SLEEVE – SLEEVE / PENETRATION DRAWING _ SHOP SLEEVE – BẢN VẼ SLEEVE / LỖ XUYÊN</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s07">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p08-s07" data-panel="p08-s07"><div class="subhead"><span class="subheadtitle">50. SHOP SLEEVE – SLEEVE / PENETRATION DRAWING _ SHOP SLEEVE – BẢN VẼ SLEEVE / LỖ XUYÊN</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p08-s07">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p08-s07" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s07-i001" data-phase="08" data-panel="p08-s07"> <span>Shop Sleeve không áp dụng quy trình IFR → IFA → IFC.</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p08-s07-i002" data-phase="08" data-panel="p08-s07"> <span>Shop Sleeve được triển khai và phát hành theo Project Requirement / Pour Schedule / Field Need Date.</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1837,6 +1883,7 @@
     <h2><span class="tag">GIAI ĐOẠN 09</span> QC / Rà soát cuối <span class="entitle">(QC / Final Review)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="09">☑ Tích hết Giai đoạn</button>
       <span class="itemcount" data-phasecount="09" data-total="149">0/149 đã hoàn thành</span>
+      <span class="phaseassignees" data-phaseassignees="09"></span>
     </h2>
     <div class="scroll-x">
       <div class="mermaid-rendered">
@@ -1844,7 +1891,7 @@
       </div>
     </div>
     <div class="items-wrap">
-      <div class="itempanel" id="p09-s01" data-panel="p09-s01"><div class="subhead"><span class="subheadtitle">40. Constructability _ Khả năng thi công</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+      <div class="itempanel" id="p09-s01" data-panel="p09-s01"><div class="subhead"><span class="subheadtitle">40. Constructability _ Khả năng thi công</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s01">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p09-s01" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s01-i001" data-phase="09" data-panel="p09-s01"> <span>Pipe can be brought into position (Ống có thể đưa vào vị trí).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s01-i002" data-phase="09" data-panel="p09-s01"> <span>Fitting can be installed (Fitting có thể lắp).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1860,7 +1907,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s01-i012" data-phase="09" data-panel="p09-s01"> <span>Installation Sequence is feasible (Trình tự lắp đặt khả thi).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p09-s02" data-panel="p09-s02"><div class="subhead"><span class="subheadtitle">41. Detailer Self-Check _ Detailer tự kiểm</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p09-s02" data-panel="p09-s02"><div class="subhead"><span class="subheadtitle">41. Detailer Self-Check _ Detailer tự kiểm</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s02">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p09-s02" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s02-i001" data-phase="09" data-panel="p09-s02"> <span>Trace each System from start to end (Trace từng hệ từ đầu đến cuối).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s02-i002" data-phase="09" data-panel="p09-s02"> <span>No Disconnected Pipe (Không có ống bị ngắt kết nối).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1876,7 +1923,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s02-i012" data-phase="09" data-panel="p09-s02"> <span>Field Layout Items Updated (Các item Field Layout đã cập nhật).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p09-s03" data-panel="p09-s03"><div class="subhead"><span class="subheadtitle">42. Checker QC _ Checker kiểm QC</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s03">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p09-s03" data-panel="p09-s03"><div class="subhead"><span class="subheadtitle">42. Checker QC _ Checker kiểm QC</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s03">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p09-s03" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s03-i001" data-phase="09" data-panel="p09-s03"> <span>Latest Input (Input mới nhất).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s03-i002" data-phase="09" data-panel="p09-s03"> <span>Scope (Phạm vi).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1905,7 +1952,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s03-i025" data-phase="09" data-panel="p09-s03"> <span>Pending/Hold Status (Trạng thái Pending/Hold).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p09-s04" data-panel="p09-s04"><div class="subhead"><span class="subheadtitle">43. QC Comment Update _ Cập nhật comment QC</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s04">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p09-s04" data-panel="p09-s04"><div class="subhead"><span class="subheadtitle">43. QC Comment Update _ Cập nhật comment QC</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s04">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p09-s04" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s04-i001" data-phase="09" data-panel="p09-s04"> <span>Comment Corrected (Đã sửa Comment).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s04-i002" data-phase="09" data-panel="p09-s04"> <span>Upstream Impact Checked (Đã kiểm ảnh hưởng phía thượng lưu).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1923,7 +1970,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s04-i014" data-phase="09" data-panel="p09-s04"> <span>Checker Verified (Checker đã xác nhận).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p09-s05" data-panel="p09-s05"><div class="subhead"><span class="subheadtitle">57. Revision Impact _ Kiểm ảnh hưởng Revision</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s05">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p09-s05" data-panel="p09-s05"><div class="subhead"><span class="subheadtitle">57. Revision Impact _ Kiểm ảnh hưởng Revision</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s05">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p09-s05" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li class="itemnote-li">Check impact to (Kiểm ảnh hưởng tới).</li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s05-i002" data-phase="09" data-panel="p09-s05"> <span>Model.</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1947,7 +1994,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s05-i020" data-phase="09" data-panel="p09-s05"> <span>Installed (Đã lắp đặt).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p09-s06" data-panel="p09-s06"><div class="subhead"><span class="subheadtitle">58. Field Feedback _ Phản hồi hiện trường</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s06">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p09-s06" data-panel="p09-s06"><div class="subhead"><span class="subheadtitle">58. Field Feedback _ Phản hồi hiện trường</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s06">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p09-s06" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s06-i001" data-phase="09" data-panel="p09-s06"> <span>Field Issue Recorded (Đã ghi nhận Issue hiện trường).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s06-i002" data-phase="09" data-panel="p09-s06"> <span>Photo Received (Đã nhận ảnh).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1965,7 +2012,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s06-i014" data-phase="09" data-panel="p09-s06"> <span>QC Complete (QC hoàn tất).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p09-s07" data-panel="p09-s07"><div class="subhead"><span class="subheadtitle">61. Final Closeout _ Hoàn tất dự án/khu vực</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s07">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p09-s07" data-panel="p09-s07"><div class="subhead"><span class="subheadtitle">61. Final Closeout _ Hoàn tất dự án/khu vực</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s07">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p09-s07" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li class="itemnote-li">Model.</li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s07-i002" data-phase="09" data-panel="p09-s07"> <span>Current Model (Model hiện hành).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -1996,7 +2043,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s07-i027" data-phase="09" data-panel="p09-s07"> <span>Correct Status (Đúng trạng thái).</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p09-s08" data-panel="p09-s08"><div class="subhead"><span class="subheadtitle">FINAL SIGN-OFF – DETAILER _ XÁC NHẬN CUỐI – DETAILER</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s08">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div>
+<div class="itempanel" id="p09-s08" data-panel="p09-s08"><div class="subhead"><span class="subheadtitle">FINAL SIGN-OFF – DETAILER _ XÁC NHẬN CUỐI – DETAILER</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s08">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p09-s08" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s08-i001" data-phase="09" data-panel="p09-s08"> <span>Latest Input Checked (Tôi đã kiểm Input mới nhất).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s08-i002" data-phase="09" data-panel="p09-s08"> <span>All Systems in Scope Traced (Tôi đã trace tất cả hệ thuộc Scope).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -2016,7 +2063,7 @@
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s08-i016" data-phase="09" data-panel="p09-s08"> <span>DETAILER: __________ DATE (Ngày): __________.</span></label><span class="answeredby" style="display:none"></span></li>
 </ul>
 </div>
-<div class="itempanel" id="p09-s09" data-panel="p09-s09"><div class="subhead"><span class="subheadtitle">FINAL SIGN-OFF – LEAD/CHECKER _ XÁC NHẬN CUỐI – LEAD/CHECKER</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s09">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div>
+<div class="itempanel" id="p09-s09" data-panel="p09-s09"><div class="subhead"><span class="subheadtitle">FINAL SIGN-OFF – LEAD/CHECKER _ XÁC NHẬN CUỐI – LEAD/CHECKER</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="p09-s09">☑ Tích hết</button><span class="rolebadge role-c">Checker / Lead</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="p09-s09" placeholder="Chưa phân công — gõ tên rồi Enter/rời chuột" /></div>
 <ul class="itemlist">
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s09-i001" data-phase="09" data-panel="p09-s09"> <span>Scope Complete (Scope đầy đủ).</span></label><span class="answeredby" style="display:none"></span></li>
 <li><label class="chkrow"><input type="checkbox" class="chk" data-id="p09-s09-i002" data-phase="09" data-panel="p09-s09"> <span>Latest Input Confirmed (Input mới nhất đã được xác nhận).</span></label><span class="answeredby" style="display:none"></span></li>
@@ -2070,6 +2117,11 @@
   var realtimeChannel = null;
   var suppressRemote = false;  // true while applying a remote/initial update, to avoid write-back loops
   var CLIENT_ID = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  var PANEL_META = {"p01-s01": {"title": "1. Project Information – Lead/Checker _ Thông tin dự án – Lead/Checker", "phase": "01"}, "p01-s02": {"title": "2. Scope Check – Lead/Checker _ Kiểm tra phạm vi công việc – Lead/Checker", "phase": "01"}, "p01-s03": {"title": "3. Scope Boundary _ Ranh giới phạm vi công việc", "phase": "01"}, "p01-s04": {"title": "4. Input Documents _ Tài liệu đầu vào", "phase": "01"}, "p01-s05": {"title": "5. Latest Information Check _ Kiểm tra thông tin mới nhất", "phase": "01"}, "p01-s06": {"title": "6. Contract Review by Detailer _ Detailer đọc Contract", "phase": "01"}, "p01-s07": {"title": "7. Trace Design Intent _ Lần theo ý đồ thiết kế", "phase": "01"}, "p01-s08": {"title": "8. Document Conflict Check _ Kiểm tra mâu thuẫn tài liệu", "phase": "01"}, "p02-s01": {"title": "9. Model Setup _ Thiết lập Model", "phase": "02"}, "p02-s02": {"title": "10. Architecture Check _ Kiểm Architecture", "phase": "02"}, "p02-s03": {"title": "11. Structure Check _ Kiểm Structure", "phase": "02"}, "p02-s04": {"title": "12. Fixture Check _ Kiểm thiết bị vệ sinh", "phase": "02"}, "p02-s05": {"title": "13. Equipment Check _ Kiểm Equipment", "phase": "02"}, "p02-s06": {"title": "14. Routing Strategy _ Chiến lược Routing", "phase": "02"}, "p02-s07": {"title": "15. Sanitary _ Hệ thống thoát nước thải", "phase": "02"}, "p02-s08": {"title": "16. Vent _ Hệ thống thông hơi", "phase": "02"}, "p02-s09": {"title": "17. Cold Water _ Hệ thống nước lạnh", "phase": "02"}, "p02-s10": {"title": "18. Hot Water _ Hệ thống nước nóng", "phase": "02"}, "p02-s11": {"title": "19. Hot Water Return _ Hệ thống nước nóng hồi", "phase": "02"}, "p02-s12": {"title": "20. Storm _ Hệ thống thoát nước mưa", "phase": "02"}, "p02-s13": {"title": "21. Overflow Storm _ Hệ thống thoát nước mưa tràn", "phase": "02"}, "p02-s14": {"title": "22. Gas / Specialty _ Hệ Gas / hệ đặc biệt", "phase": "02"}, "p03-s01": {"title": "27. Access / Maintenance _ Không gian tiếp cận / bảo trì", "phase": "03"}, "p03-s02": {"title": "28. Insulation _ Bảo ôn / cách nhiệt", "phase": "03"}, "p03-s03": {"title": "29. Hanger / Support _ Giá treo / hệ đỡ", "phase": "03"}, "p03-s04": {"title": "30. Penetration Strategy _ Chiến lược Sleeve / lỗ xuyên", "phase": "03"}, "p03-s05": {"title": "31. Deck / Floor Sleeve _ Sleeve xuyên Deck / sàn", "phase": "03"}, "p03-s06": {"title": "32. Wall / Roof Sleeve / Opening _ Sleeve tường / mái / Opening", "phase": "03"}, "p03-s07": {"title": "33. Core Drill _ Khoan Core", "phase": "03"}, "p03-s08": {"title": "34. Deck Insert _ Insert chôn sẵn trong Deck", "phase": "03"}, "p04-s01": {"title": "23. Elevation Check _ Kiểm cao độ", "phase": "04"}, "p04-s02": {"title": "24. Coordination _ Phối hợp", "phase": "04"}, "p04-s03": {"title": "25. Customer Issue / RFI _ Issue / RFI gửi khách hàng", "phase": "04"}, "p04-s04": {"title": "26. Customer Response _ Xử lý phản hồi khách hàng", "phase": "04"}, "p05-s01": {"title": "35. Trimble / Field Layout Point _ Điểm Trimble / Layout hiện trường", "phase": "05"}, "p05-s02": {"title": "36. Underground Stub-Up _ Điểm ống ngầm chờ lên", "phase": "05"}, "p05-s03": {"title": "37. Fixture / Equipment Rough-In _ Điểm chờ Fixture / Equipment", "phase": "05"}, "p05-s04": {"title": "38. Field Layout Release _ Release Layout hiện trường", "phase": "05"}, "p05-s05": {"title": "39. Pour Schedule Control _ Kiểm soát tiến độ đổ bê tông", "phase": "05"}, "p06-s01": {"title": "50. Spool Ready _ Xác nhận đủ điều kiện làm Spool", "phase": "06"}, "p06-s02": {"title": "51. Spool Planning / Break _ Lập kế hoạch / chia Spool", "phase": "06"}, "p06-s03": {"title": "52. Field Connection _ Điểm kết nối tại hiện trường", "phase": "06"}, "p06-s04": {"title": "53. Spool Drawing _ Bản vẽ Spool", "phase": "06"}, "p06-s05": {"title": "54. Spool Dimension _ Dimension bản vẽ Spool", "phase": "06"}, "p06-s06": {"title": "56. Spool QC / Release _ QC Spool / Release Fabrication", "phase": "06"}, "p07-s01": {"title": "55. BOM – Bill of Materials _ Bảng vật tư", "phase": "07"}, "p07-s02": {"title": "59. Pending / Hold Register _ Danh sách Pending / Hold", "phase": "07"}, "p07-s03": {"title": "60. Superseded File Control _ Quản lý file đã bị thay thế", "phase": "07"}, "p08-s01": {"title": "44. SHOP PIPE – IFR – ISSUE FOR REVIEW _ SHOP PIPE – PHÁT HÀNH ĐỂ KHÁCH HÀNG XEM XÉT", "phase": "08"}, "p08-s02": {"title": "45. IFR CUSTOMER COMMENTS _ XỬ LÝ COMMENT KHÁCH HÀNG SAU IFR", "phase": "08"}, "p08-s03": {"title": "46. IFA – ISSUE FOR APPROVAL – SHOP PIPE _ SHOP PIPE – PHÁT HÀNH ĐỂ PHÊ DUYỆT", "phase": "08"}, "p08-s04": {"title": "47. APPROVAL RESPONSE _ PHẢN HỒI PHÊ DUYỆT", "phase": "08"}, "p08-s05": {"title": "48. IFC – ISSUE FOR CONSTRUCTION – SHOP PIPE _ SHOP PIPE – PHÁT HÀNH ĐỂ THI CÔNG", "phase": "08"}, "p08-s06": {"title": "49. PDF / FILENAME / TRANSMITTAL – SHOP PIPE _ KIỂM PDF / TÊN FILE / TRANSMITTAL – SHOP PIPE", "phase": "08"}, "p08-s07": {"title": "50. SHOP SLEEVE – SLEEVE / PENETRATION DRAWING _ SHOP SLEEVE – BẢN VẼ SLEEVE / LỖ XUYÊN", "phase": "08"}, "p09-s01": {"title": "40. Constructability _ Khả năng thi công", "phase": "09"}, "p09-s02": {"title": "41. Detailer Self-Check _ Detailer tự kiểm", "phase": "09"}, "p09-s03": {"title": "42. Checker QC _ Checker kiểm QC", "phase": "09"}, "p09-s04": {"title": "43. QC Comment Update _ Cập nhật comment QC", "phase": "09"}, "p09-s05": {"title": "57. Revision Impact _ Kiểm ảnh hưởng Revision", "phase": "09"}, "p09-s06": {"title": "58. Field Feedback _ Phản hồi hiện trường", "phase": "09"}, "p09-s07": {"title": "61. Final Closeout _ Hoàn tất dự án/khu vực", "phase": "09"}, "p09-s08": {"title": "FINAL SIGN-OFF – DETAILER _ XÁC NHẬN CUỐI – DETAILER", "phase": "09"}, "p09-s09": {"title": "FINAL SIGN-OFF – LEAD/CHECKER _ XÁC NHẬN CUỐI – LEAD/CHECKER", "phase": "09"}};
+  var PHASE_TITLES = {"01": "Thiết lập dự án", "02": "Dựng Model", "03": "Kỹ thuật & Giá đỡ", "04": "Phối hợp", "05": "Trimble / Layout hiện trường", "06": "Spool hoá", "07": "BOM / Báo cáo", "08": "Bản vẽ Shop", "09": "QC / Rà soát cuối"};
+  var itemMeta = {};       // item_id -> {by, at} for answered items (drives the management dashboard)
+  var ASSIGNMENTS = {};    // panel_id -> assignee name
+  var assignInputs = Array.prototype.slice.call(document.querySelectorAll('.assigninput'));
 
   function formatWhen(iso) {
     if (!iso) return '';
@@ -2127,6 +2179,8 @@
     try { var raw = window.localStorage.getItem(CACHE_PREFIX + projectId); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
   }
 
+  var LAST_STATS = {overallChecked: 0, byPhase: {}, byPanel: {}};
+
   function updateProgress() {
     var overallChecked = 0;
     var byPhase = {};
@@ -2140,6 +2194,7 @@
       if (isAnswered(el)) { overallChecked++; byPhase[p].checked++; byPanel[pnl].checked++; }
       if (el.tagName === 'SELECT') { el.classList.toggle('answered', el.value !== ''); }
     });
+    LAST_STATS = {overallChecked: overallChecked, byPhase: byPhase, byPanel: byPanel};
     var pct = TOTAL ? Math.round(overallChecked / TOTAL * 100) : 0;
     document.getElementById('overallLabel').textContent = overallChecked + ' / ' + TOTAL + ' đã hoàn thành (' + pct + '%)';
     document.getElementById('overallFill').style.width = pct + '%';
@@ -2179,8 +2234,10 @@
     var v = valueOf(el);
     var worker = document.getElementById('workerName').value || null;
     var nowIso = new Date().toISOString();
+    var id = idOf(el);
     setAnsweredByTag(el, v !== '' ? worker : '', v !== '' ? formatWhen(nowIso) : '');
-    var row = { project_id: CURRENT_PROJECT.id, item_id: idOf(el), value: v, updated_by: worker };
+    if (v !== '') { itemMeta[id] = {by: worker || 'Ẩn danh', at: nowIso}; } else { delete itemMeta[id]; }
+    var row = { project_id: CURRENT_PROJECT.id, item_id: id, value: v, updated_by: worker };
     sb.from('progress').upsert(row).then(function(res) {
       if (res.error) { setSyncStatus('err', 'Lỗi đồng bộ: ' + res.error.message); }
       else { setSyncStatus('ok', 'Đồng bộ: ' + CURRENT_PROJECT.name); }
@@ -2192,8 +2249,10 @@
     var nowIso = new Date().toISOString();
     var rows = els.map(function(el) {
       var v = valueOf(el);
+      var id = idOf(el);
       setAnsweredByTag(el, v !== '' ? worker : '', v !== '' ? formatWhen(nowIso) : '');
-      return { project_id: CURRENT_PROJECT.id, item_id: idOf(el), value: v, updated_by: worker };
+      if (v !== '') { itemMeta[id] = {by: worker || 'Ẩn danh', at: nowIso}; } else { delete itemMeta[id]; }
+      return { project_id: CURRENT_PROJECT.id, item_id: id, value: v, updated_by: worker };
     });
     setSyncStatus('', 'Đang đồng bộ ' + rows.length + ' mục...');
     sb.from('progress').upsert(rows).then(function(res) {
@@ -2207,6 +2266,7 @@
       if (res.error) { setSyncStatus('err', 'Lỗi xoá: ' + res.error.message); }
       else { setSyncStatus('ok', 'Đã xoá — đồng bộ: ' + CURRENT_PROJECT.name); }
     });
+    itemMeta = {};
   }
   function applyRemoteRow(row) {
     var el = elById[row.item_id];
@@ -2215,6 +2275,8 @@
     setElValue(el, row.value);
     suppressRemote = false;
     setAnsweredByTag(el, row.value ? row.updated_by : '', row.value ? formatWhen(row.updated_at) : '');
+    if (row.value) { itemMeta[row.item_id] = {by: row.updated_by || 'Ẩn danh', at: row.updated_at}; }
+    else { delete itemMeta[row.item_id]; }
   }
   function loadInitialProgress() {
     return sb.from('progress').select('item_id,value,updated_by,updated_at').eq('project_id', CURRENT_PROJECT.id).then(function(res) {
@@ -2226,6 +2288,7 @@
           setElValue(el, row.value);
           setAnsweredByTag(el, row.value ? row.updated_by : '', row.value ? formatWhen(row.updated_at) : '');
         }
+        if (row.value) { itemMeta[row.item_id] = {by: row.updated_by || 'Ẩn danh', at: row.updated_at}; }
       });
       suppressRemote = false;
       updateProgress();
@@ -2238,6 +2301,54 @@
     var uniq = names.filter(function(n, i) { return names.indexOf(n) === i; });
     el.textContent = '👥 Online (' + uniq.length + '): ' + uniq.join(', ');
   }
+
+  // ---- Assignment ("Giao cho") per panel ----
+  function updatePhaseAssigneesDisplay() {
+    var byPhase = {};
+    Object.keys(ASSIGNMENTS).forEach(function(panelId) {
+      var name = ASSIGNMENTS[panelId];
+      if (!name) return;
+      var meta = PANEL_META[panelId];
+      if (!meta) return;
+      byPhase[meta.phase] = byPhase[meta.phase] || [];
+      if (byPhase[meta.phase].indexOf(name) === -1) byPhase[meta.phase].push(name);
+    });
+    document.querySelectorAll('[data-phaseassignees]').forEach(function(el) {
+      var p = el.getAttribute('data-phaseassignees');
+      var names = byPhase[p] || [];
+      el.textContent = names.length ? ('· Người phụ trách: ' + names.join(', ')) : '';
+    });
+  }
+  function applyAssignmentRow(row) {
+    ASSIGNMENTS[row.panel_id] = row.assignee || '';
+    var input = document.querySelector('.assigninput[data-panel="' + row.panel_id + '"]');
+    if (input) { input.value = row.assignee || ''; input.classList.toggle('filled', !!row.assignee); }
+    updatePhaseAssigneesDisplay();
+  }
+  function loadInitialAssignments() {
+    return sb.from('assignments').select('panel_id,assignee').eq('project_id', CURRENT_PROJECT.id).then(function(res) {
+      if (res.error) { return; }  // table may not exist yet on older projects — fail silently, feature just stays empty
+      (res.data || []).forEach(applyAssignmentRow);
+    });
+  }
+  function saveAssignment(panelId, assignee) {
+    if (!sb || !CURRENT_PROJECT) return;
+    ASSIGNMENTS[panelId] = assignee;
+    updatePhaseAssigneesDisplay();
+    sb.from('assignments').upsert({
+      project_id: CURRENT_PROJECT.id, panel_id: panelId, assignee: assignee,
+      assigned_by: document.getElementById('workerName').value || null
+    }).then(function(res) {
+      if (res.error) { setSyncStatus('err', 'Lỗi lưu phân công: ' + res.error.message); }
+    });
+  }
+  assignInputs.forEach(function(inp) {
+    inp.addEventListener('change', function() {
+      inp.classList.toggle('filled', !!inp.value.trim());
+      saveAssignment(inp.getAttribute('data-panel'), inp.value.trim());
+    });
+  });
+
   function subscribeRealtime() {
     if (realtimeChannel) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
     realtimeChannel = sb.channel('progress-' + CURRENT_PROJECT.id, {config: {presence: {key: CLIENT_ID}}})
@@ -2247,6 +2358,11 @@
         applyRemoteRow(payload.eventType === 'DELETE' ? {item_id: row.item_id, value: '', updated_by: '', updated_at: ''} : row);
         updateProgress();
         cacheProjectLocally();
+      })
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'assignments', filter: 'project_id=eq.' + CURRENT_PROJECT.id}, function(payload) {
+        var row = (payload.new && Object.keys(payload.new).length) ? payload.new : payload.old;
+        if (!row) return;
+        applyAssignmentRow(payload.eventType === 'DELETE' ? {panel_id: row.panel_id, assignee: ''} : row);
       })
       .on('presence', {event: 'sync'}, function() {
         var state = realtimeChannel.presenceState();
@@ -2413,6 +2529,7 @@
     var cache = loadProjectCache(CURRENT_PROJECT.id);
     if (cache) { applyProgressData(cache, 'bộ nhớ tạm trên máy này', false); }
     if (!sb) { setSyncStatus('err', 'Không tải được thư viện đồng bộ (kiểm tra kết nối Internet).'); return; }
+    loadInitialAssignments();
     loadInitialProgress().then(function() {
       subscribeRealtime();
     }).catch(function(err) {
@@ -2469,6 +2586,86 @@
     if (realtimeChannel && CURRENT_PROJECT) {
       realtimeChannel.track({name: document.getElementById('workerName').value || 'Ẩn danh'});
     }
+  });
+
+  // ---- Management dashboard: per-phase %, per-person totals, per-panel assignment ----
+  function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : String(t); return d.innerHTML; }
+  function barCell(done, total) {
+    var pct = total ? Math.round(done / total * 100) : 0;
+    return '<div class="barcell"><div class="minibar"><div class="minibar-fill" style="width:' + pct + '%"></div></div>' +
+           '<span>' + done + '/' + total + ' (' + pct + '%)</span></div>';
+  }
+  function renderDashboard() {
+    var proj = document.getElementById('dashProjectLine');
+    proj.textContent = CURRENT_PROJECT
+      ? ('Dự án: ' + CURRENT_PROJECT.name + ' — tổng ' + LAST_STATS.overallChecked + '/' + TOTAL + ' mục (' + (TOTAL ? Math.round(LAST_STATS.overallChecked / TOTAL * 100) : 0) + '%)')
+      : 'Chưa vào dự án nào.';
+
+    // -- per phase --
+    var phaseKeys = Object.keys(PHASE_TITLES).sort();
+    var byPhaseAssignees = {};
+    Object.keys(ASSIGNMENTS).forEach(function(panelId) {
+      var name = ASSIGNMENTS[panelId];
+      if (!name) return;
+      var meta = PANEL_META[panelId];
+      if (!meta) return;
+      byPhaseAssignees[meta.phase] = byPhaseAssignees[meta.phase] || [];
+      if (byPhaseAssignees[meta.phase].indexOf(name) === -1) byPhaseAssignees[meta.phase].push(name);
+    });
+    var rowsHtml = phaseKeys.map(function(p) {
+      var stat = LAST_STATS.byPhase[p] || {checked: 0, total: 0};
+      var pct = stat.total ? Math.round(stat.checked / stat.total * 100) : 0;
+      var names = byPhaseAssignees[p] || [];
+      return '<tr class="' + (pct < 50 ? 'lagging' : '') + '">' +
+        '<td>Giai đoạn ' + p + ' — ' + esc(PHASE_TITLES[p]) + '</td>' +
+        '<td>' + barCell(stat.checked, stat.total) + '</td>' +
+        '<td>' + (names.length ? esc(names.join(', ')) : '<span class="dashempty">chưa phân công</span>') + '</td>' +
+        '</tr>';
+    }).join('');
+    document.getElementById('dashByPhase').innerHTML =
+      '<table class="dashtable"><thead><tr><th>Giai đoạn</th><th>Tiến độ</th><th>Người phụ trách</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>';
+
+    // -- per person --
+    var byPerson = {};
+    Object.keys(itemMeta).forEach(function(id) {
+      var name = itemMeta[id].by || 'Ẩn danh';
+      byPerson[name] = (byPerson[name] || 0) + 1;
+    });
+    var people = Object.keys(byPerson).sort(function(a, b) { return byPerson[b] - byPerson[a]; });
+    if (!people.length) {
+      document.getElementById('dashByPerson').innerHTML = '<div class="dashempty">Chưa có ai tick mục nào.</div>';
+    } else {
+      var personRows = people.map(function(name) {
+        var count = byPerson[name];
+        var pct = TOTAL ? Math.round(count / TOTAL * 100) : 0;
+        return '<tr><td>' + esc(name) + '</td><td>' + barCell(count, TOTAL) + '</td></tr>';
+      }).join('');
+      document.getElementById('dashByPerson').innerHTML =
+        '<table class="dashtable"><thead><tr><th>Người thực hiện</th><th>Số mục đã tick / tổng toàn checklist</th></tr></thead><tbody>' + personRows + '</tbody></table>';
+    }
+
+    // -- per panel assignment + progress --
+    var panelIds = Object.keys(PANEL_META).sort();
+    var panelRows = panelIds.map(function(pid) {
+      var meta = PANEL_META[pid];
+      var stat = LAST_STATS.byPanel[pid] || {checked: 0, total: 0};
+      var pct = stat.total ? Math.round(stat.checked / stat.total * 100) : 0;
+      var assignee = ASSIGNMENTS[pid] || '';
+      return '<tr class="' + (pct < 50 ? 'lagging' : '') + '">' +
+        '<td>' + esc(meta.title) + '</td>' +
+        '<td>' + (assignee ? esc(assignee) : '<span class="dashempty">chưa phân công</span>') + '</td>' +
+        '<td>' + barCell(stat.checked, stat.total) + '</td>' +
+        '</tr>';
+    }).join('');
+    document.getElementById('dashByPanel').innerHTML =
+      '<table class="dashtable"><thead><tr><th>Mục</th><th>Giao cho</th><th>Tiến độ</th></tr></thead><tbody>' + panelRows + '</tbody></table>';
+  }
+  document.getElementById('btnDashboard').addEventListener('click', function() {
+    renderDashboard();
+    document.getElementById('dashboardOverlay').style.display = 'flex';
+  });
+  document.getElementById('btnCloseDashboard').addEventListener('click', function() {
+    document.getElementById('dashboardOverlay').style.display = 'none';
   });
 
   var lastProject = loadLastProject();
