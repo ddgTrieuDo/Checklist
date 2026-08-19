@@ -411,6 +411,7 @@
   }
   .check2badge-clickable{cursor:pointer;}
   .check2badge-clickable:hover{filter:brightness(0.95);}
+  .check2badge-other{opacity:.5;}
   @media print {
     .navbar{position:static;}
     .tradebar{position:static;display:none;}
@@ -2847,8 +2848,12 @@
     var itemId = idOf(el);
     var rec = itemCheck2[itemId + '|' + targetName];
     if (rec) {
-      var canToggleOff = !!CURRENT_USER && rec.reviewer_user_id === CURRENT_USER.id;
-      return '<span class="check2badge' + (canToggleOff ? ' check2badge-clickable' : '') + '" data-check2-item="' + esc(itemId) + '" data-check2-target="' + esc(targetName) + '">🔍 Check 2: ' + esc(rec.reviewer_name) + '</span>';
+      // Badges I authored myself stay full-color so my own Check 2 marks
+      // stand out at a glance; badges someone else made are dimmed down —
+      // still visible/informational, just visually de-emphasized.
+      var isMine = !!CURRENT_USER && rec.reviewer_user_id === CURRENT_USER.id;
+      var cls = 'check2badge' + (isMine ? ' check2badge-clickable' : ' check2badge-other');
+      return '<span class="' + cls + '" data-check2-item="' + esc(itemId) + '" data-check2-target="' + esc(targetName) + '">🔍 Check 2: ' + esc(rec.reviewer_name) + '</span>';
     }
     if (!CURRENT_USER || myName() === targetName) return ''; // can't verify your own tick
     return '<button type="button" class="check2btn" data-check2-item="' + esc(itemId) + '" data-check2-target="' + esc(targetName) + '">+ Check 2</button>';
