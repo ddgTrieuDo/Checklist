@@ -268,6 +268,18 @@
     border-top:1px dashed var(--line);
   }
   .itemlist li.itemnote-li:first-child{border-top:none;padding-top:3px;}
+  .dailyitem{
+    background:#fdf8ec;border:1px solid #eddfae;border-radius:8px;
+    margin:3px 0;padding:2px 4px;
+  }
+  .dailyitem-row{padding:4px 6px;}
+  .dailyitem-row:hover{background:#fbf1d6;}
+  .dailybadge{
+    display:inline-block;margin:0 0 4px 27px;font-size:10.5px;font-weight:700;
+    padding:2px 8px;border-radius:20px;
+    background:#fdeecb;color:#8a5a12;border:1px solid #eddfae;
+  }
+  .dailybadge-done{background:#e3f3e8;color:var(--green);border-color:#bfe3cc;}
   .rolebadge{
     font-size:10px;font-weight:700;padding:1px 8px;border-radius:20px;white-space:nowrap;
   }
@@ -454,7 +466,7 @@
   </div>
   <div class="toolbar">
     <div class="progresswrap">
-      <span id="overallLabel">0 / 1223 completed (0%)</span>
+      <span id="overallLabel">0 / 1219 completed (0%)</span>
       <div class="progressbar"><div class="progressbar-fill" id="overallFill"></div></div>
     </div>
     <span class="userbadge" id="userBadge"></span>
@@ -521,7 +533,7 @@
   <div class="card phasecard" id="phase01">
     <h2><span class="tag">PHASE 01</span> Project Setup <span class="entitle">(Thiết lập dự án)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="01">☑ Check All Phase</button>
-      <span class="itemcount" data-phasecount="01" data-total="146">0/146 completed</span>
+      <span class="itemcount" data-phasecount="01" data-total="142">0/142 completed</span>
       <span class="phaseassignees" data-phaseassignees="01"></span>
     </h2>
     <div class="scroll-x">
@@ -650,12 +662,12 @@
 <li class="chkitem" data-id="hv-p01-s05-ss1-i006"><div class="chkitem-row"><label class="chkrow chkitem-shared"><input type="checkbox" class="chk" data-id="hv-p01-s05-ss1-i006" data-phase="01" data-panel="hv-p01-s05"> <span>Fabrication Database (Xác nhận/yêu cầu khách hàng cung cấp Database nếu dự án sử dụng Fabrication).</span></label><div class="chkitem-multi" data-item="hv-p01-s05-ss1-i006" style="display:none"></div><button type="button" class="assignitembtn" data-item="hv-p01-s05-ss1-i006" title="Giao việc riêng cho mục này (mỗi người tự tích phần của mình)">👤+</button></div><span class="answeredby" style="display:none"></span><div class="assignpopover" data-item="hv-p01-s05-ss1-i006" style="display:none"></div></li>
 <li class="chkitem" data-id="hv-p01-s05-ss1-i007"><div class="chkitem-row"><label class="chkrow chkitem-shared"><input type="checkbox" class="chk" data-id="hv-p01-s05-ss1-i007" data-phase="01" data-panel="hv-p01-s05"> <span>Title Block (Yêu cầu/xác nhận Title Block chính thức của dự án).</span></label><div class="chkitem-multi" data-item="hv-p01-s05-ss1-i007" style="display:none"></div><button type="button" class="assignitembtn" data-item="hv-p01-s05-ss1-i007" title="Giao việc riêng cho mục này (mỗi người tự tích phần của mình)">👤+</button></div><span class="answeredby" style="display:none"></span><div class="assignpopover" data-item="hv-p01-s05-ss1-i007" style="display:none"></div></li>
 <li class="chkitem" data-id="hv-p01-s05-ss1-i008"><div class="chkitem-row"><label class="chkrow chkitem-shared"><input type="checkbox" class="chk" data-id="hv-p01-s05-ss1-i008" data-phase="01" data-panel="hv-p01-s05"> <span>BOM Template (Xác nhận mẫu Excel/BOM phải sử dụng nếu dự án có Duct Fabrication/BOM).</span></label><div class="chkitem-multi" data-item="hv-p01-s05-ss1-i008" style="display:none"></div><button type="button" class="assignitembtn" data-item="hv-p01-s05-ss1-i008" title="Giao việc riêng cho mục này (mỗi người tự tích phần của mình)">👤+</button></div><span class="answeredby" style="display:none"></span><div class="assignpopover" data-item="hv-p01-s05-ss1-i008" style="display:none"></div></li>
-<li class="chkitem" data-id="hv-p01-s05-ss1-i009"><div class="chkitem-row"><label class="chkrow chkitem-shared"><input type="checkbox" class="chk" data-id="hv-p01-s05-ss1-i009" data-phase="01" data-panel="hv-p01-s05"> <span>Project Website / Procore / Box Check (Thường xuyên kiểm tra website dự án, Procore, Box hoặc nền tảng khách hàng để lấy RFI, ASI, Bulletin, Revision và chỉ đạo mới).</span></label><div class="chkitem-multi" data-item="hv-p01-s05-ss1-i009" style="display:none"></div><button type="button" class="assignitembtn" data-item="hv-p01-s05-ss1-i009" title="Giao việc riêng cho mục này (mỗi người tự tích phần của mình)">👤+</button></div><span class="answeredby" style="display:none"></span><div class="assignpopover" data-item="hv-p01-s05-ss1-i009" style="display:none"></div></li>
-<li class="chkitem" data-id="hv-p01-s05-ss1-i010"><div class="chkitem-row"><label class="chkrow chkitem-shared"><input type="checkbox" class="chk" data-id="hv-p01-s05-ss1-i010" data-phase="01" data-panel="hv-p01-s05"> <span>Daily Customer Message Check (Mỗi ngày kiểm tra tin nhắn/chỉ đạo của khách hàng; lưu lại screenshot/record rõ ràng và cập nhật vào công việc).</span></label><div class="chkitem-multi" data-item="hv-p01-s05-ss1-i010" style="display:none"></div><button type="button" class="assignitembtn" data-item="hv-p01-s05-ss1-i010" title="Giao việc riêng cho mục này (mỗi người tự tích phần của mình)">👤+</button></div><span class="answeredby" style="display:none"></span><div class="assignpopover" data-item="hv-p01-s05-ss1-i010" style="display:none"></div></li>
+<li class="dailyitem" data-id="hv-p01-s05-ss1-i009"><label class="chkrow dailyitem-row"><input type="checkbox" class="chk" data-daily="1" data-id="hv-p01-s05-ss1-i009" data-phase="01" data-panel="hv-p01-s05"> <span>🔁 Project Website / Procore / Box Check (Thường xuyên kiểm tra website dự án, Procore, Box hoặc nền tảng khách hàng để lấy RFI, ASI, Bulletin, Revision và chỉ đạo mới).</span></label><span class="dailybadge" data-daily-badge="hv-p01-s05-ss1-i009">Cần làm hôm nay</span></li>
+<li class="dailyitem" data-id="hv-p01-s05-ss1-i010"><label class="chkrow dailyitem-row"><input type="checkbox" class="chk" data-daily="1" data-id="hv-p01-s05-ss1-i010" data-phase="01" data-panel="hv-p01-s05"> <span>🔁 Daily Customer Message Check (Mỗi ngày kiểm tra tin nhắn/chỉ đạo của khách hàng; lưu lại screenshot/record rõ ràng và cập nhật vào công việc).</span></label><span class="dailybadge" data-daily-badge="hv-p01-s05-ss1-i010">Cần làm hôm nay</span></li>
 <li class="chkitem" data-id="hv-p01-s05-ss1-i011"><div class="chkitem-row"><label class="chkrow chkitem-shared"><input type="checkbox" class="chk" data-id="hv-p01-s05-ss1-i011" data-phase="01" data-panel="hv-p01-s05"> <span>Deliverable Storage (Các file Revit, DWG, NWC, NWD và deliverable liên quan phải được lưu/giao theo yêu cầu khách hàng; đồng thời duy trì bản hiện hành tại vị trí quản lý nội bộ được quy định).</span></label><div class="chkitem-multi" data-item="hv-p01-s05-ss1-i011" style="display:none"></div><button type="button" class="assignitembtn" data-item="hv-p01-s05-ss1-i011" title="Giao việc riêng cho mục này (mỗi người tự tích phần của mình)">👤+</button></div><span class="answeredby" style="display:none"></span><div class="assignpopover" data-item="hv-p01-s05-ss1-i011" style="display:none"></div></li>
-<li class="chkitem" data-id="hv-p01-s05-ss1-i012"><div class="chkitem-row"><label class="chkrow chkitem-shared"><input type="checkbox" class="chk" data-id="hv-p01-s05-ss1-i012" data-phase="01" data-panel="hv-p01-s05"> <span>End-of-Day Sync (Sync Revit Central cuối ngày và relinquish/không giữ Workset).</span></label><div class="chkitem-multi" data-item="hv-p01-s05-ss1-i012" style="display:none"></div><button type="button" class="assignitembtn" data-item="hv-p01-s05-ss1-i012" title="Giao việc riêng cho mục này (mỗi người tự tích phần của mình)">👤+</button></div><span class="answeredby" style="display:none"></span><div class="assignpopover" data-item="hv-p01-s05-ss1-i012" style="display:none"></div></li>
+<li class="dailyitem" data-id="hv-p01-s05-ss1-i012"><label class="chkrow dailyitem-row"><input type="checkbox" class="chk" data-daily="1" data-id="hv-p01-s05-ss1-i012" data-phase="01" data-panel="hv-p01-s05"> <span>🔁 End-of-Day Sync (Sync Revit Central cuối ngày và relinquish/không giữ Workset).</span></label><span class="dailybadge" data-daily-badge="hv-p01-s05-ss1-i012">Cần làm hôm nay</span></li>
 <li class="chkitem" data-id="hv-p01-s05-ss1-i013"><div class="chkitem-row"><label class="chkrow chkitem-shared"><input type="checkbox" class="chk" data-id="hv-p01-s05-ss1-i013" data-phase="01" data-panel="hv-p01-s05"> <span>Clean Client Model (Xóa các View tạm/Test View do Detailer tạo trước khi giao model cho khách hàng, trừ View được yêu cầu giữ lại).</span></label><div class="chkitem-multi" data-item="hv-p01-s05-ss1-i013" style="display:none"></div><button type="button" class="assignitembtn" data-item="hv-p01-s05-ss1-i013" title="Giao việc riêng cho mục này (mỗi người tự tích phần của mình)">👤+</button></div><span class="answeredby" style="display:none"></span><div class="assignpopover" data-item="hv-p01-s05-ss1-i013" style="display:none"></div></li>
-<li class="chkitem" data-id="hv-p01-s05-ss1-i014"><div class="chkitem-row"><label class="chkrow chkitem-shared"><input type="checkbox" class="chk" data-id="hv-p01-s05-ss1-i014" data-phase="01" data-panel="hv-p01-s05"> <span>Daily Progress Update (Cuối ngày gửi Progress Update và các file yêu cầu cho khách hàng theo quy trình dự án).</span></label><div class="chkitem-multi" data-item="hv-p01-s05-ss1-i014" style="display:none"></div><button type="button" class="assignitembtn" data-item="hv-p01-s05-ss1-i014" title="Giao việc riêng cho mục này (mỗi người tự tích phần của mình)">👤+</button></div><span class="answeredby" style="display:none"></span><div class="assignpopover" data-item="hv-p01-s05-ss1-i014" style="display:none"></div></li>
+<li class="dailyitem" data-id="hv-p01-s05-ss1-i014"><label class="chkrow dailyitem-row"><input type="checkbox" class="chk" data-daily="1" data-id="hv-p01-s05-ss1-i014" data-phase="01" data-panel="hv-p01-s05"> <span>🔁 Daily Progress Update (Cuối ngày gửi Progress Update và các file yêu cầu cho khách hàng theo quy trình dự án).</span></label><span class="dailybadge" data-daily-badge="hv-p01-s05-ss1-i014">Cần làm hôm nay</span></li>
 </ul></div>
 <div class="itempanel" id="hv-p01-s06" data-panel="hv-p01-s06"><div class="subhead"><span class="subheadtitle">106. Contract Review by Detailer _ Detailer đọc Contract</span><span class="subheadctrl"><button type="button" class="checkallbtn" data-scope="panel" data-target="hv-p01-s06">☑ Tích hết</button><span class="rolebadge role-d">Detailer</span></span></div><div class="assignrow"><span class="assignlabel">Giao cho:</span><input type="text" class="assigninput" data-panel="hv-p01-s06" placeholder="VD: Trieu Do, Hy Le — cách nhau bằng dấu phẩy nếu giao cho nhiều người" /></div><div class="assignchips" data-panel="hv-p01-s06"></div><div class="assignmismatch" data-panel="hv-p01-s06"></div>
 <ul class="itemlist">
@@ -2223,7 +2235,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
   </div>
 
 
-  <footer>Auto-generated from "MASTER CHECKLIST – FULL HVAC DETAILING" · 9 Phases · 64 sections · 1223 checklist items</footer>
+  <footer>Auto-generated from "MASTER CHECKLIST – FULL HVAC DETAILING" · 9 Phases · 64 sections · 1219 checklist items</footer>
 </div>
 
 <script>
@@ -2253,7 +2265,11 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
   var allEls = Array.prototype.slice.call(document.querySelectorAll('.chk'));
   var checkboxes = allEls.filter(function(el) { return el.tagName === 'INPUT'; });
   var selects = allEls.filter(function(el) { return el.tagName === 'SELECT'; });
-  var TOTAL = allEls.length;
+  // Daily-recurring items (data-daily="1") stay in allEls/elById so they
+  // still ride the normal load/save/realtime pipeline (see applyDailyState
+  // below), but they're excluded from TOTAL and every %/Check-All
+  // calculation — they're an ongoing habit, not a one-time milestone.
+  var TOTAL = allEls.filter(function(el) { return !el.hasAttribute('data-daily'); }).length;
   var elById = {};
   allEls.forEach(function(el) { elById[el.getAttribute('data-id')] = el; });
 
@@ -2284,6 +2300,42 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
       return new Date(iso).toLocaleString('vi-VN', {hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit'});
     } catch (e) { return ''; }
   }
+  // ---- daily-recurring items: "done" only counts for today (device-local
+  // date) — same underlying progress row/value as a normal item, just
+  // re-derived against the clock instead of trusted at face value, so it
+  // reads as freshly unchecked every new day without ever deleting history. ----
+  function isToday(iso) {
+    if (!iso) return false;
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return false;
+    var n = new Date();
+    return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+  }
+  function applyDailyState(el) {
+    if (!el || !el.hasAttribute('data-daily')) return;
+    var id = idOf(el);
+    var meta = itemMeta[id];
+    var doneToday = !!(meta && isToday(meta.at));
+    el.checked = doneToday;
+    var badge = document.querySelector('[data-daily-badge="' + id + '"]');
+    if (!badge) return;
+    if (doneToday) {
+      badge.className = 'dailybadge dailybadge-done';
+      badge.textContent = '✅ Đã làm hôm nay' + (meta.by ? ' — ' + meta.by : '');
+    } else if (meta) {
+      badge.className = 'dailybadge';
+      badge.textContent = '🔁 Cần làm hôm nay (lần cuối: ' + formatWhen(meta.at) + (meta.by ? ' — ' + meta.by : '') + ')';
+    } else {
+      badge.className = 'dailybadge';
+      badge.textContent = '🔁 Cần làm hôm nay';
+    }
+  }
+  // Re-check daily items' "done today?" status periodically, so a tab left
+  // open across midnight flips back to "cần làm" on its own without needing
+  // a manual page reload.
+  setInterval(function() {
+    allEls.forEach(function(el) { if (el.hasAttribute('data-daily')) applyDailyState(el); });
+  }, 5 * 60 * 1000);
   function setAnsweredByTag(el, by, when) {
     var host = el.closest('li,td');
     if (!host) return;
@@ -2368,6 +2420,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
   // considered "done" even after every checkbox is checked.
   function checkAllScopeState(scope, target) {
     var inScope = checkboxes.filter(function(cb) {
+      if (cb.hasAttribute('data-daily')) return false;
       return scope === 'phase' ? cb.getAttribute('data-phase') === target : cb.getAttribute('data-panel') === target;
     });
     var unassigned = inScope.filter(function(cb) {
@@ -2392,13 +2445,14 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     var byPhase = {};
     var byPanel = {};
     allEls.forEach(function(el) {
+      if (el.tagName === 'SELECT') { el.classList.toggle('answered', el.value !== ''); syncStatusDropColor(el); }
+      if (el.hasAttribute('data-daily')) return; // recurring habit, not a % milestone — excluded from all stats
       var p = el.getAttribute('data-phase');
       var pnl = el.getAttribute('data-panel');
       byPhase[p] = byPhase[p] || {checked:0, total:0};
       byPanel[pnl] = byPanel[pnl] || {checked:0, total:0};
       byPhase[p].total++; byPanel[pnl].total++;
       if (isAnswered(el)) { overallChecked++; byPhase[p].checked++; byPanel[pnl].checked++; }
-      if (el.tagName === 'SELECT') { el.classList.toggle('answered', el.value !== ''); syncStatusDropColor(el); }
     });
     LAST_STATS = {overallChecked: overallChecked, byPhase: byPhase, byPanel: byPanel};
     var pct = TOTAL ? Math.round(overallChecked / TOTAL * 100) : 0;
@@ -2442,7 +2496,8 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     var id = idOf(el);
     setAnsweredByTag(el, v !== '' ? worker : '', v !== '' ? formatWhen(nowIso) : '');
     if (v !== '') { itemMeta[id] = {by: worker, at: nowIso}; } else { delete itemMeta[id]; }
-    var row = { project_id: CURRENT_PROJECT.id, item_id: id, value: v, updated_by: worker };
+    applyDailyState(el);
+    var row = { project_id: CURRENT_PROJECT.id, item_id: id, value: v, updated_by: worker, updated_at: nowIso };
     sb.from('progress').upsert(row).then(function(res) {
       if (res.error) { setSyncStatus('err', 'Sync error: ' + res.error.message); }
       else { setSyncStatus('ok', 'Synced: ' + CURRENT_PROJECT.name); }
@@ -2457,7 +2512,8 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
       var id = idOf(el);
       setAnsweredByTag(el, v !== '' ? worker : '', v !== '' ? formatWhen(nowIso) : '');
       if (v !== '') { itemMeta[id] = {by: worker, at: nowIso}; } else { delete itemMeta[id]; }
-      return { project_id: CURRENT_PROJECT.id, item_id: id, value: v, updated_by: worker };
+      applyDailyState(el);
+      return { project_id: CURRENT_PROJECT.id, item_id: id, value: v, updated_by: worker, updated_at: nowIso };
     });
     setSyncStatus('', 'Syncing ' + rows.length + ' items...');
     sb.from('progress').upsert(rows).then(function(res) {
@@ -2488,6 +2544,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     setAnsweredByTag(el, row.value ? row.updated_by : '', row.value ? formatWhen(row.updated_at) : '');
     if (row.value) { itemMeta[row.item_id] = {by: row.updated_by || 'Anonymous', at: row.updated_at}; }
     else { delete itemMeta[row.item_id]; }
+    applyDailyState(el);
   }
   function loadInitialProgress() {
     return sb.from('progress').select('item_id,value,updated_by,updated_at').eq('project_id', CURRENT_PROJECT.id).then(function(res) {
@@ -2500,6 +2557,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
           setAnsweredByTag(el, row.value ? row.updated_by : '', row.value ? formatWhen(row.updated_at) : '');
         }
         if (row.value) { itemMeta[row.item_id] = {by: row.updated_by || 'Anonymous', at: row.updated_at}; }
+        if (el) applyDailyState(el);
       });
       suppressRemote = false;
       updateProgress();
@@ -2946,6 +3004,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
       var scope = btn.getAttribute('data-scope');
       var target = btn.getAttribute('data-target');
       var inScope = checkboxes.filter(function(cb) {
+        if (cb.hasAttribute('data-daily')) return false;
         return scope === 'phase' ? cb.getAttribute('data-phase') === target : cb.getAttribute('data-panel') === target;
       });
       // Items nobody has individually claimed yet: bulk-toggle the shared checkbox as before.
@@ -2997,6 +3056,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
       try { window.localStorage.removeItem(CACHE_PREFIX + CURRENT_PROJECT.id); } catch (e) {}
     }
     remoteClearProject();
+    allEls.forEach(function(el) { if (el.hasAttribute('data-daily')) applyDailyState(el); });
     setStatus('Cleared all checks for the project.');
   });
 
