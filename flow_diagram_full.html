@@ -2837,23 +2837,36 @@
       return true;
     }
 
-    if (extra.length && (!primaryName || myOwnName === primaryName)) {
-      // I was the primary confirmer and someone else already confirmed too —
-      // promote them to primary instead of erasing their confirmation.
-      var promoted = extra[0];
-      itemExtraChecks[id] = extra.slice(1);
-      itemMeta[id] = {by: promoted.name, at: promoted.updated_at};
-      el.checked = true;
-      setAnsweredByTag(el, promoted.name, formatWhen(promoted.updated_at));
-      renderExtraConfirm(id);
-      if (sb && CURRENT_PROJECT) {
-        sb.from('progress').upsert({project_id: CURRENT_PROJECT.id, item_id: id, value: '1', updated_by: promoted.name, updated_at: promoted.updated_at}).then(function() {});
-        sb.from('item_extra_checks').delete().eq('project_id', CURRENT_PROJECT.id).eq('item_id', id).eq('user_id', promoted.user_id).then(function() {});
+    var iAmPrimary = !primaryName || myOwnName === primaryName;
+    if (iAmPrimary) {
+      if (extra.length) {
+        // I was the primary confirmer and someone else already confirmed
+        // too — promote them to primary instead of erasing their confirmation.
+        var promoted = extra[0];
+        itemExtraChecks[id] = extra.slice(1);
+        itemMeta[id] = {by: promoted.name, at: promoted.updated_at};
+        el.checked = true;
+        setAnsweredByTag(el, promoted.name, formatWhen(promoted.updated_at));
+        renderExtraConfirm(id);
+        if (sb && CURRENT_PROJECT) {
+          sb.from('progress').upsert({project_id: CURRENT_PROJECT.id, item_id: id, value: '1', updated_by: promoted.name, updated_at: promoted.updated_at}).then(function() {});
+          sb.from('item_extra_checks').delete().eq('project_id', CURRENT_PROJECT.id).eq('item_id', id).eq('user_id', promoted.user_id).then(function() {});
+        }
+        return true;
       }
-      return true;
+      return false; // I'm the only confirmer — proceed with a normal full clear
     }
 
-    return false; // no other confirmation exists — proceed with a normal full clear
+    // I'm neither the primary confirmer nor an existing extra confirmer —
+    // clicking an already-checked shared box isn't a withdrawal from me,
+    // it's me confirming this item too (same as the "+ Xác nhận thêm"
+    // button), so record it instead of wiping out someone else's work.
+    if (CURRENT_USER) {
+      el.checked = true;
+      addExtraConfirm(id);
+      return true;
+    }
+    return false;
   }
   document.addEventListener('click', function(e) {
     var btn = e.target.closest('.extraconfirmbtn');
