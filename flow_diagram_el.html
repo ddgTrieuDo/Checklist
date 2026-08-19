@@ -2524,10 +2524,16 @@ PREFAB → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMI
   // ---- remote (Supabase) read/write: shared progress (open items) ----
   function remoteSaveOne(el) {
     if (!sb || !CURRENT_PROJECT || suppressRemote) return;
+    var id = idOf(el);
+    var isEligibleForShare = el.tagName !== 'SELECT' && !el.hasAttribute('data-daily') && !(itemAssignees[id] || []).length;
+    if (isEligibleForShare && !el.checked && handleSharedUncheck(el, id)) {
+      updateProgress();
+      cacheProjectLocally();
+      return; // someone else's confirmation survives — item stays checked, nothing more to sync
+    }
     var v = valueOf(el);
     var worker = myName();
     var nowIso = new Date().toISOString();
-    var id = idOf(el);
     setAnsweredByTag(el, v !== '' ? worker : '', v !== '' ? formatWhen(nowIso) : '');
     if (v !== '') { itemMeta[id] = {by: worker, at: nowIso}; } else { delete itemMeta[id]; }
     applyDailyState(el);
@@ -2542,15 +2548,23 @@ PREFAB → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMI
     if (!sb || !CURRENT_PROJECT || suppressRemote || !els.length) return;
     var worker = myName();
     var nowIso = new Date().toISOString();
-    var rows = els.map(function(el) {
-      var v = valueOf(el);
+    var rows = [];
+    els.forEach(function(el) {
       var id = idOf(el);
+      var isEligibleForShare = el.tagName !== 'SELECT' && !el.hasAttribute('data-daily') && !(itemAssignees[id] || []).length;
+      if (isEligibleForShare && !el.checked && handleSharedUncheck(el, id)) {
+        return; // someone else's confirmation survives — handled individually, skip the batch
+      }
+      var v = valueOf(el);
       setAnsweredByTag(el, v !== '' ? worker : '', v !== '' ? formatWhen(nowIso) : '');
       if (v !== '') { itemMeta[id] = {by: worker, at: nowIso}; } else { delete itemMeta[id]; }
       applyDailyState(el);
       if (v === '') { clearExtraChecks(id, true); } else { renderExtraConfirm(id); }
-      return { project_id: CURRENT_PROJECT.id, item_id: id, value: v, updated_by: worker, updated_at: nowIso };
+      rows.push({ project_id: CURRENT_PROJECT.id, item_id: id, value: v, updated_by: worker, updated_at: nowIso });
     });
+    updateProgress();
+    cacheProjectLocally();
+    if (!rows.length) return;
     setSyncStatus('', 'Syncing ' + rows.length + ' items...');
     sb.from('progress').upsert(rows).then(function(res) {
       if (res.error) { setSyncStatus('err', 'Sync error: ' + res.error.message); }
@@ -2827,12 +2841,56 @@ PREFAB → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMI
     });
   }
   function clearExtraChecks(itemId, alsoDeleteRemote) {
-    if (!(itemExtraChecks[itemId] || []).length) return;
+    var hadAny = !!(itemExtraChecks[itemId] || []).length;
     itemExtraChecks[itemId] = [];
-    renderExtraConfirm(itemId);
-    if (alsoDeleteRemote && sb && CURRENT_PROJECT) {
+    renderExtraConfirm(itemId); // always re-render so the dim/bright class reflects the item's now-unanswered state
+    if (hadAny && alsoDeleteRemote && sb && CURRENT_PROJECT) {
       sb.from('item_extra_checks').delete().eq('project_id', CURRENT_PROJECT.id).eq('item_id', itemId).then(function() {});
     }
+  }
+  // A shared (non-"Giao cho"-assigned) checkbox can carry more than one
+  // person's confirmation — the "primary" progress row plus an optional
+  // extra confirmer. Whoever physically unchecks the box should only ever
+  // withdraw THEIR OWN confirmation, never someone else's. Returns true if
+  // it fully handled the uncheck (another confirmation survives, so the
+  // item stays checked) — the caller should stop there. Returns false when
+  // nobody else had confirmed, meaning a normal full clear should proceed.
+  function handleSharedUncheck(el, id) {
+    var extra = itemExtraChecks[id] || [];
+    var myOwnName = myName();
+    var primaryName = (itemMeta[id] && itemMeta[id].by) || '';
+    var myExtraIdx = CURRENT_USER ? extra.findIndex(function(c) { return c.user_id === CURRENT_USER.id; }) : -1;
+
+    if (myExtraIdx !== -1) {
+      // I was only the extra confirmer — remove just my own entry; the
+      // primary confirmation (and the checked state) stays untouched.
+      var mine = extra[myExtraIdx];
+      itemExtraChecks[id] = extra.slice(0, myExtraIdx).concat(extra.slice(myExtraIdx + 1));
+      el.checked = true;
+      renderExtraConfirm(id);
+      if (sb && CURRENT_PROJECT) {
+        sb.from('item_extra_checks').delete().eq('project_id', CURRENT_PROJECT.id).eq('item_id', id).eq('user_id', mine.user_id).then(function() {});
+      }
+      return true;
+    }
+
+    if (extra.length && (!primaryName || myOwnName === primaryName)) {
+      // I was the primary confirmer and someone else already confirmed too —
+      // promote them to primary instead of erasing their confirmation.
+      var promoted = extra[0];
+      itemExtraChecks[id] = extra.slice(1);
+      itemMeta[id] = {by: promoted.name, at: promoted.updated_at};
+      el.checked = true;
+      setAnsweredByTag(el, promoted.name, formatWhen(promoted.updated_at));
+      renderExtraConfirm(id);
+      if (sb && CURRENT_PROJECT) {
+        sb.from('progress').upsert({project_id: CURRENT_PROJECT.id, item_id: id, value: '1', updated_by: promoted.name, updated_at: promoted.updated_at}).then(function() {});
+        sb.from('item_extra_checks').delete().eq('project_id', CURRENT_PROJECT.id).eq('item_id', id).eq('user_id', promoted.user_id).then(function() {});
+      }
+      return true;
+    }
+
+    return false; // no other confirmation exists — proceed with a normal full clear
   }
   document.addEventListener('click', function(e) {
     var btn = e.target.closest('.extraconfirmbtn');
