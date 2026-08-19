@@ -27,8 +27,33 @@
   header{margin-bottom:20px;}
   h1{font-size:22px;margin:0 0 6px;font-weight:700;}
   .subtitle{color:var(--sub);font-size:14px;margin:0;}
+  .tradebar{
+    position:sticky;top:0;z-index:11;
+    background:#1b2430;
+    padding:8px 24px;
+    margin:0 -24px 0;
+    display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;
+  }
+  .tradebar-label{font-size:12px;color:#9fb0c3;margin-right:2px;}
+  .tradelink{
+    font-size:12px;font-weight:600;
+    color:#cfe0f2;
+    text-decoration:none;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.06);
+    padding:4px 12px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+  .tradelink:hover{background:rgba(255,255,255,.16);}
+  .tradelink-active{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+    cursor:default;
+  }
   .navbar{
-    position:sticky;top:0;z-index:10;
+    position:sticky;top:37px;z-index:10;
     background:rgba(245,247,249,.97);
     backdrop-filter:blur(4px);
     border-bottom:1px solid var(--line);
@@ -339,6 +364,7 @@
   .fieldrow .answeredby, .scopecell .answeredby{margin-left:0;margin-top:3px;}
   @media print {
     .navbar{position:static;}
+    .tradebar{position:static;display:none;}
     .toolbar{display:none;}
   }
 </style>
@@ -405,6 +431,14 @@
   </div>
 </div>
 
+<div class="tradebar">
+  <span class="tradebar-label">Ngành:</span>
+  <span class="tradelink tradelink-active">Plumbing</span>
+    <a href="flow_diagram_hvac.html" class="tradelink">HVAC</a>
+    <a href="flow_diagram_mp.html" class="tradelink">Mechanical Piping</a>
+    <a href="flow_diagram_fp.html" class="tradelink">Fire Protection</a>
+    <a href="flow_diagram_el.html" class="tradelink">Electrical</a>
+</div>
 <div class="navbar">
   <div class="navlinks">
     <a href="#top" class="navlink">↑ Overview</a>
@@ -2155,7 +2189,14 @@
 
 <script>
 (function() {
-  var LAST_PROJECT_KEY = 'plumbing_last_project_v1';
+  // Shared (NOT trade-specific) so switching between trade pages (Plumbing/
+  // HVAC/MP/FP/EL — separate .html files) keeps reopening the same project
+  // automatically instead of forcing re-entry of the access code each time.
+  var LAST_PROJECT_KEY = 'mep_last_project_v1';
+  // Trade-specific: each trade page only ever contains ITS OWN checkboxes/
+  // selects, so its local cache must be keyed separately per trade — else
+  // switching trades would overwrite (and lose) another trade's cached
+  // local progress for the same project on this device.
   var CACHE_PREFIX = 'plumbing_project_cache_v1_';
 
   var SUPABASE_URL = 'https://owevmiwcacptrhchgtkx.supabase.co';
