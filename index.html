@@ -331,6 +331,7 @@
   .dashtable tbody tr[data-navto]:hover td{background:#e9f1f8;}
   .dashtable tbody tr[data-navto].lagging:hover td{background:#fbe8d4;}
   .dashempty{font-size:12px;color:var(--sub);font-style:italic;}
+  .dash-pending{font-size:10px;color:#8a5a12;margin-top:2px;}
   .answeredby{
     display:block;font-size:10px;font-style:italic;color:#2c8a4e;
     margin:1px 0 0 22px;
@@ -3220,11 +3221,50 @@
     return '<div class="barcell"><div class="minibar"><div class="minibar-fill" style="width:' + pct + '%"></div></div>' +
            '<span>' + done + '/' + total + ' (' + pct + '%)</span></div>';
   }
+  // For a multi-assignee item, the shared/overall progress only counts it as
+  // done once EVERY assignee has confirmed their own line (see
+  // syncSharedCheckboxFromConfirmations) — a real multi-person sign-off, not
+  // a bulk override. That means a panel/phase can sit well under 100% even
+  // after the CURRENT user has confirmed every item assigned to them,
+  // because a co-assignee hasn't confirmed yet. This computes, per panel and
+  // per phase, exactly who that still-pending co-assignee is, so the
+  // Dashboard can explain the number instead of just showing a low %.
+  function computePendingConfirmers() {
+    var pendingByPanel = {};
+    Object.keys(itemAssignees).forEach(function(itemId) {
+      var el = elById[itemId];
+      if (!el) return;
+      var pid = el.getAttribute('data-panel');
+      (itemAssignees[itemId] || []).forEach(function(a) {
+        var conf = itemConfirmations[itemId + '|' + a.user_id];
+        var done = !!conf && conf.value !== '';
+        if (!done) {
+          pendingByPanel[pid] = pendingByPanel[pid] || {};
+          pendingByPanel[pid][a.name] = true;
+        }
+      });
+    });
+    var pendingByPhase = {};
+    Object.keys(pendingByPanel).forEach(function(pid) {
+      var meta = PANEL_META[pid];
+      if (!meta) return;
+      pendingByPhase[meta.phase] = pendingByPhase[meta.phase] || {};
+      Object.keys(pendingByPanel[pid]).forEach(function(name) { pendingByPhase[meta.phase][name] = true; });
+    });
+    return {byPanel: pendingByPanel, byPhase: pendingByPhase};
+  }
+  function pendingNote(namesObj) {
+    var names = namesObj ? Object.keys(namesObj) : [];
+    if (!names.length) return '';
+    return '<div class="dash-pending">⏳ Chờ xác nhận: ' + esc(names.join(', ')) + '</div>';
+  }
+
   function renderDashboard() {
     var proj = document.getElementById('dashProjectLine');
     proj.textContent = CURRENT_PROJECT
       ? ('Project: ' + CURRENT_PROJECT.name + ' — total ' + LAST_STATS.overallChecked + '/' + TOTAL + ' items (' + (TOTAL ? Math.round(LAST_STATS.overallChecked / TOTAL * 100) : 0) + '%)')
       : 'No project selected yet.';
+    var pending = computePendingConfirmers();
 
     // -- per phase --
     var phaseKeys = Object.keys(PHASE_TITLES).sort();
@@ -3243,7 +3283,7 @@
       var names = byPhaseAssignees[p] || [];
       return '<tr class="' + (pct < 50 ? 'lagging' : '') + '" data-navto="phase' + p + '" title="Click to jump to this phase">' +
         '<td>Phase ' + p + ' — ' + esc(PHASE_TITLES[p]) + '</td>' +
-        '<td>' + barCell(stat.checked, stat.total) + '</td>' +
+        '<td>' + barCell(stat.checked, stat.total) + pendingNote(pending.byPhase[p]) + '</td>' +
         '<td>' + (names.length ? esc(names.join(', ')) : '<span class="dashempty">unassigned</span>') + '</td>' +
         '</tr>';
     }).join('');
@@ -3291,7 +3331,7 @@
       return '<tr class="' + (pct < 50 ? 'lagging' : '') + '" data-navto="' + pid + '" title="Click to jump to this section">' +
         '<td>' + esc(meta.title) + '</td>' +
         '<td>' + (assignee ? esc(assignee) : '<span class="dashempty">unassigned</span>') + '</td>' +
-        '<td>' + barCell(stat.checked, stat.total) + '</td>' +
+        '<td>' + barCell(stat.checked, stat.total) + pendingNote(pending.byPanel[pid]) + '</td>' +
         '</tr>';
     }).join('');
     document.getElementById('dashByPanel').innerHTML =
