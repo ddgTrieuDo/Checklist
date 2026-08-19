@@ -258,19 +258,27 @@
   .extraconfirm{margin:1px 0 4px 22px;}
   .extraconfirm .answeredby{margin:1px 0 0 0;}
   .iteminlinenote{display:block;font-size:11px;font-style:italic;color:var(--sub);margin-top:2px;}
-  .chkitem-row{display:flex;align-items:flex-start;gap:4px;}
+  .chkitem-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px;}
   .chkitem-row .chkitem-shared{flex:1;}
-  .chkitem-multi{flex:1;}
+  /* Wraps onto its own line below the checkbox+label (not beside it) —
+     this is a small read-only status strip, not a replacement for the row. */
+  .chkitem-multi{flex:1 0 100%;margin:1px 0 2px 22px;}
   .assignitembtn{
     flex:none;font-size:10px;line-height:1;border:1px solid var(--line);background:#fff;color:var(--sub);
     border-radius:6px;padding:3px 5px;cursor:pointer;opacity:.45;margin-top:2px;
   }
   .assignitembtn:hover{opacity:1;background:#eef4fb;color:var(--accent);border-color:#cfe0f0;}
   .assignitembtn.has-assignees{opacity:1;background:#eef4fb;color:var(--accent);border-color:#cfe0f0;}
-  .multiconfirm-row{padding:2px 4px;}
-  .multiconfirm-row.readonly{opacity:.7;}
-  .multiconfirm-row.readonly input{cursor:not-allowed;}
-  .chkitem-multi-title{font-size:12.5px;color:var(--sub);margin-bottom:2px;}
+  /* Assigned item: ONE shared checkbox/select for the whole item (not one
+     row per assignee). Only whoever is in the assignee list can interact
+     with it — everyone else sees it locked (disabled, dimmed). Below it, a
+     read-only line lists each assignee's own status so you can still see
+     who has confirmed and who hasn't, without a separate clickable row. */
+  .chkrow input:disabled{cursor:not-allowed;opacity:.5;}
+  .assignedstatus-list{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:10.5px;}
+  .assignedstatus{white-space:nowrap;}
+  .assignedstatus-done{color:var(--green);}
+  .assignedstatus-pending{color:var(--sub);opacity:.75;}
   .assignpopover{
     margin-top:6px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#fbfcfd;
     box-shadow:0 4px 14px rgba(16,24,32,.12);
@@ -322,11 +330,8 @@
   .scopetable tbody tr:hover td.scopecell{background:#e7edf2;}
   .scopetable td.scopecell select.statusdrop{width:100%;min-width:150px;}
   .scopecell-multi{text-align:left;}
-  .multiconfirm-drow{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:11px;}
-  .multiconfirm-drow-name{flex:none;min-width:64px;max-width:64px;color:var(--ink);font-weight:600;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .multiconfirm-drow select{flex:1;min-width:0;font-size:11px;}
-  .multiconfirm-drow.readonly select{opacity:.65;cursor:not-allowed;}
-  .multiconfirm-drow .answeredby{margin:0;flex:none;}
+  .scopecell select.chk:disabled{cursor:not-allowed;opacity:.5;}
+  .scopecell-assignedstatus{display:flex;flex-direction:column;gap:2px;font-size:10px;margin-top:4px;}
   .fieldrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:3px 4px;}
   .fieldlabel{flex:1;min-width:160px;}
   .statusdrop{
@@ -391,6 +396,11 @@
   .dashtable tbody tr[data-navto].lagging:hover td{background:#fbe8d4;}
   .dashempty{font-size:12px;color:var(--sub);font-style:italic;}
   .dash-pending{font-size:10px;color:#8a5a12;margin-top:2px;}
+  .pendingrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .pendingrow-actions{display:flex;gap:6px;flex:none;}
+  .adminprojectrow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .adminassignrow{display:flex;gap:6px;flex:none;}
+  .adminleademail{font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;min-width:200px;}
   .answeredby{
     display:flex;align-items:baseline;flex-wrap:wrap;justify-content:space-between;gap:6px 10px;
     font-size:10px;font-style:italic;color:var(--green);
@@ -481,6 +491,38 @@
   </div>
 </div>
 
+<div class="gate-overlay" id="pendingOverlay" style="display:none;">
+  <div class="gate-card">
+    <h2>⏳ Đang chờ duyệt</h2>
+    <p id="pendingMsg">Bạn đã gửi yêu cầu vào dự án này. Trưởng dự án (hoặc Admin) cần duyệt trước khi bạn xem/thao tác được dữ liệu. Vui lòng liên hệ họ, hoặc bấm "Kiểm tra lại" sau khi được duyệt.</p>
+    <button type="button" class="gate-btn" id="pendingRecheckBtn">↻ Kiểm tra lại</button>
+    <button type="button" class="gate-btn" id="pendingSwitchBtn" style="background:#fff;color:var(--accent);border:1px solid var(--accent);margin-top:8px;">Chọn / Tạo dự án khác</button>
+    <div class="gate-error" id="pendingError"></div>
+  </div>
+</div>
+
+<div class="gate-overlay" id="leadOverlay" style="display:none;align-items:flex-start;padding:40px 20px;">
+  <div class="gate-card" style="max-width:640px;max-height:85vh;overflow-y:auto;">
+    <h2 style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      ✅ Duyệt thành viên
+      <button type="button" class="toolbtn" id="btnCloseLead" style="padding:4px 10px;">✕ Close</button>
+    </h2>
+    <p style="font-size:12.5px;color:var(--sub);">Những người đang chờ vào dự án "<span id="leadProjectName"></span>". Chỉ Trưởng dự án / Admin thấy được mục này.</p>
+    <div id="leadPendingList"></div>
+  </div>
+</div>
+
+<div class="gate-overlay" id="adminOverlay" style="display:none;align-items:flex-start;padding:40px 20px;">
+  <div class="gate-card" style="max-width:720px;max-height:85vh;overflow-y:auto;">
+    <h2 style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      👑 Admin — Quản lý dự án
+      <button type="button" class="toolbtn" id="btnCloseAdmin" style="padding:4px 10px;">✕ Close</button>
+    </h2>
+    <p style="font-size:12.5px;color:var(--sub);">Chỉ Admin thấy được mục này: xem tất cả dự án và chỉ định Trưởng dự án cho từng dự án. Tạo dự án mới vẫn qua nút "+ Join Project" như bình thường — chỉ Admin mới tạo được dự án CHƯA từng có.</p>
+    <div id="adminProjectsList"></div>
+  </div>
+</div>
+
 <div class="tradebar">
   <span class="tradebar-label">Ngành:</span>
   <a href="flow_diagram_full.html" class="tradelink">Plumbing</a>
@@ -515,6 +557,8 @@
     <span class="syncstatus" id="syncStatus"><span class="dot"></span><span id="syncStatusText">No project selected</span></span>
     <span class="onlineusers" id="onlineUsers"></span>
     <button type="button" class="toolbtn" id="btnDashboard">📊 Dashboard</button>
+    <button type="button" class="toolbtn" id="btnLeadApprovals" style="display:none;">✅ Duyệt thành viên</button>
+    <button type="button" class="toolbtn" id="btnAdminPanel" style="display:none;">👑 Admin</button>
     <button type="button" class="toolbtn" id="btnLogout">Log Out</button>
   </div>
 </div>
@@ -2314,6 +2358,15 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
   var CURRENT_PROJECT = null;  // {id, name, code}
   var MY_PROJECTS = [];        // [{id, name, access_code}] every project this account has joined
   var CURRENT_USER = null;     // {id, email, display_name} -- set once logged in via Supabase Auth
+  // Admin/Lead role system: Admin (site-wide, app_admins table) creates
+  // projects and assigns a Lead per project; the Lead (project_members.role)
+  // approves staff join requests and is the only one (with Admin) who can
+  // assign staff to individual work items. A brand-new join request sits as
+  // project_members.status='pending' until approved — before that, RLS on
+  // every project table blocks reads/writes for that account entirely.
+  var IS_ADMIN = false;
+  var MY_ROLE = 'staff';       // role on CURRENT_PROJECT: 'lead' | 'staff'
+  var MY_STATUS = 'approved';  // status on CURRENT_PROJECT: 'pending' | 'approved'
   var realtimeChannel = null;
   var suppressRemote = false;  // true while applying a remote/initial update, to avoid write-back loops
   var CLIENT_ID = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -3019,44 +3072,45 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     if (el.tagName === 'SELECT') { renderDropdownAssignMode(itemId, el); }
     else { renderCheckboxAssignMode(itemId, el); }
   }
+  // One shared checkbox/select per item (never a row-per-assignee). When an
+  // item has assignees, that ONE control is only interactive for whoever is
+  // in the assignee list (everyone else sees it locked/disabled — this is
+  // also enforced server-side via RLS on item_confirmations, so it's a real
+  // permission, not just a UI hint). A small read-only line below shows each
+  // assignee's own status so the team can still see who's done and who's
+  // pending, without a separate clickable row per person.
+  function assignedStatusHtml(itemId, assignees, isDaily) {
+    return assignees.map(function(a) {
+      var conf = itemConfirmations[itemId + '|' + a.user_id];
+      // '1' for a checkbox, or any chosen option value for a status dropdown
+      // — either way, "confirmed" just means the stored value isn't empty.
+      var confirmedRaw = !!conf && conf.value !== '';
+      var confirmed = confirmedRaw && (!isDaily || isToday(conf.updated_at));
+      var whenTag = confirmed && conf.updated_at ? (' · ' + esc(formatWhen(conf.updated_at))) : '';
+      var cls = 'assignedstatus ' + (confirmed ? 'assignedstatus-done' : 'assignedstatus-pending');
+      return '<span class="' + cls + '">' + (confirmed ? '✓' : '○') + ' ' + esc(a.name) + whenTag + '</span>';
+    }).join('');
+  }
   function renderCheckboxAssignMode(itemId, el) {
     var host = document.querySelector('.chkitem[data-id="' + itemId + '"]');
     if (!host) return;
     var sharedLabel = host.querySelector('.chkitem-shared');
     var multiEl = host.querySelector('.chkitem-multi');
     var btn = host.querySelector('.assignitembtn');
-    var liAnsweredBy = host.querySelector('.answeredby');
     var assignees = itemAssignees[itemId] || [];
+    sharedLabel.style.display = '';
     if (!assignees.length) {
-      sharedLabel.style.display = '';
+      el.disabled = false;
       multiEl.style.display = 'none';
       multiEl.innerHTML = '';
       if (btn) btn.classList.remove('has-assignees');
       return;
     }
-    sharedLabel.style.display = 'none';
-    if (liAnsweredBy) { liAnsweredBy.style.display = 'none'; liAnsweredBy.textContent = ''; }
+    var isMe = !!(CURRENT_USER && assignees.some(function(a) { return a.user_id === CURRENT_USER.id; }));
+    el.disabled = !isMe;
     if (btn) btn.classList.add('has-assignees');
     var isDaily = el.hasAttribute('data-daily');
-    var titleSpan = sharedLabel.querySelector('span');
-    var titleHtml = titleSpan ? titleSpan.innerHTML : '';
-    var rowsHtml = assignees.map(function(a) {
-      var conf = itemConfirmations[itemId + '|' + a.user_id];
-      // For a daily-recurring item, a confirmation only counts as "done" if
-      // it was made TODAY — same reset-every-day rule as the single-owner
-      // case, just applied per assignee. The "when" tag still shows the
-      // last confirm time even if stale, so the team can see who's behind.
-      var confirmedRaw = !!conf && conf.value === '1';
-      var checked = confirmedRaw && (!isDaily || isToday(conf.updated_at));
-      var isMe = !!(CURRENT_USER && CURRENT_USER.id === a.user_id);
-      var whenTag = confirmedRaw ? (' <span class="answeredby" style="display:inline">✓' + (conf.updated_at ? (' · ' + formatWhen(conf.updated_at)) : '') + '</span>') : '';
-      return '<label class="chkrow multiconfirm-row' + (isMe ? '' : ' readonly') + '">' +
-        '<input type="checkbox" class="multiconfirmchk" data-item="' + esc(itemId) + '" data-user="' + esc(a.user_id) + '"' +
-          (checked ? ' checked' : '') + (isMe ? '' : ' disabled') + '> ' +
-        '<span>' + esc(a.name) + whenTag + '</span>' +
-        '</label>';
-    }).join('');
-    multiEl.innerHTML = '<div class="chkitem-multi-title">' + titleHtml + '</div>' + rowsHtml;
+    multiEl.innerHTML = '<div class="assignedstatus-list">' + assignedStatusHtml(itemId, assignees, isDaily) + '</div>';
     multiEl.style.display = 'block';
   }
   function renderDropdownAssignMode(itemId, selectEl) {
@@ -3067,32 +3121,17 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     var multiDiv = wrap.querySelector('.scopecell-multi');
     if (!sharedDiv || !multiDiv) return;
     var assignees = itemAssignees[itemId] || [];
+    sharedDiv.style.display = '';
     if (!assignees.length) {
-      sharedDiv.style.display = '';
+      selectEl.disabled = false;
       multiDiv.style.display = 'none';
       multiDiv.innerHTML = '';
       return;
     }
-    sharedDiv.style.display = 'none';
-    var optionsHtml = selectEl.innerHTML;
-    var rowsHtml = assignees.map(function(a) {
-      var conf = itemConfirmations[itemId + '|' + a.user_id];
-      var val = conf ? conf.value : '';
-      var isMe = !!(CURRENT_USER && CURRENT_USER.id === a.user_id);
-      var whenTag = val && conf.updated_at ? (' <span class="answeredby" style="display:inline">✓ ' + formatWhen(conf.updated_at) + '</span>') : '';
-      return '<div class="multiconfirm-drow' + (isMe ? '' : ' readonly') + '">' +
-        '<span class="multiconfirm-drow-name">' + esc(a.name) + '</span>' +
-        '<select class="multiconfirmdrop" data-item="' + esc(itemId) + '" data-user="' + esc(a.user_id) + '"' + (isMe ? '' : ' disabled') + '>' + optionsHtml + '</select>' +
-        whenTag +
-        '</div>';
-    }).join('');
-    multiDiv.innerHTML = rowsHtml;
+    var isMe = !!(CURRENT_USER && assignees.some(function(a) { return a.user_id === CURRENT_USER.id; }));
+    selectEl.disabled = !isMe;
+    multiDiv.innerHTML = '<div class="scopecell-assignedstatus">' + assignedStatusHtml(itemId, assignees, false) + '</div>';
     multiDiv.style.display = 'block';
-    assignees.forEach(function(a) {
-      var conf = itemConfirmations[itemId + '|' + a.user_id];
-      var sel = multiDiv.querySelector('.multiconfirmdrop[data-user="' + a.user_id + '"]');
-      if (sel) { sel.value = conf ? conf.value : ''; syncStatusDropColor(sel); }
-    });
   }
   function syncSharedCheckboxFromConfirmations(itemId) {
     var el = elById[itemId];
@@ -3224,25 +3263,26 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
       document.querySelectorAll('.assignpopover').forEach(function(p) { p.style.display = 'none'; });
     }
   });
-  document.addEventListener('change', function(e) {
-    var cb = e.target.closest('.multiconfirmchk');
-    if (cb) {
-      if (cb.disabled) return;
-      var cbItemId = cb.getAttribute('data-item');
-      var cbUserId = cb.getAttribute('data-user');
-      if (!CURRENT_USER || CURRENT_USER.id !== cbUserId) return; // safety net: never write someone else's confirmation
-      saveItemConfirmation(cbItemId, cbUserId, cb.checked);
+  // Assigned item, single shared checkbox/select: whoever is clicking must
+  // be one of the assignees (also enforced server-side via RLS — this is
+  // just the client-side mirror). Toggle THEIR OWN confirmation, based on
+  // their own prior status (not the shared control's displayed state, which
+  // reflects the whole group and can look "unchecked" even after they've
+  // already confirmed their own part).
+  function handleAssignedToggle(el, itemId) {
+    var assignees = itemAssignees[itemId] || [];
+    if (!CURRENT_USER || !assignees.some(function(a) { return a.user_id === CURRENT_USER.id; })) {
+      syncSharedCheckboxFromConfirmations(itemId); // shouldn't happen (input is disabled) — just resync
       return;
     }
-    var sel = e.target.closest('.multiconfirmdrop');
-    if (sel) {
-      if (sel.disabled) return;
-      var selItemId = sel.getAttribute('data-item');
-      var selUserId = sel.getAttribute('data-user');
-      if (!CURRENT_USER || CURRENT_USER.id !== selUserId) return; // safety net: never write someone else's confirmation
-      saveItemConfirmation(selItemId, selUserId, sel.value);
+    var mine = itemConfirmations[itemId + '|' + CURRENT_USER.id];
+    if (el.tagName === 'SELECT') {
+      saveItemConfirmation(itemId, CURRENT_USER.id, el.value);
+    } else {
+      var wasMine = !!mine && mine.value === '1';
+      saveItemConfirmation(itemId, CURRENT_USER.id, !wasMine);
     }
-  });
+  }
 
   function subscribeRealtime() {
     if (realtimeChannel) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
@@ -3340,6 +3380,11 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
 
   allEls.forEach(function(el) {
     el.addEventListener('change', function() {
+      var id = idOf(el);
+      if ((itemAssignees[id] || []).length) {
+        handleAssignedToggle(el, id);
+        return;
+      }
       updateProgress();
       cacheProjectLocally();
       remoteSaveOne(el);
@@ -3528,6 +3573,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     CURRENT_USER = {id: user.id, email: user.email, display_name: displayName || (user.email || '')};
     document.getElementById('userBadge').textContent = '👤 ' + CURRENT_USER.display_name;
     authOverlay.style.display = 'none';
+    checkIsAdmin().then(updateRoleUi);
     refreshMyProjects().then(function(list) {
       if (!list.length) {
         // Never joined a project on this account yet — must enter a name + code once.
@@ -3586,12 +3632,14 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     CURRENT_PROJECT = null;
     CURRENT_USER = null;
     MY_PROJECTS = [];
+    IS_ADMIN = false; MY_ROLE = 'staff'; MY_STATUS = 'approved';
     clearLastProject();
     if (sb) sb.auth.signOut();
     gateNameEl.value = ''; gateCodeEl.value = '';
     showGateError('');
     setSyncStatus('', 'No project selected');
     gateOverlay.style.display = 'none';
+    pendingOverlay.style.display = 'none';
     var switcherEl = document.getElementById('projectSwitcher');
     if (switcherEl) { switcherEl.innerHTML = ''; switcherEl.style.display = 'none'; }
     authEmailEl.value = ''; authPasswordEl.value = ''; authDisplayNameEl.value = '';
@@ -3607,6 +3655,40 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
   var gateCodeEl = document.getElementById('gateAccessCode');
   var gateBtn = document.getElementById('gateBtnEnter');
   var gateErrorEl = document.getElementById('gateError');
+  var pendingOverlay = document.getElementById('pendingOverlay');
+  var leadOverlay = document.getElementById('leadOverlay');
+  var adminOverlay = document.getElementById('adminOverlay');
+
+  // ---- Admin/Lead role checks ----
+  function checkIsAdmin() {
+    if (!sb || !CURRENT_USER) return Promise.resolve(false);
+    return sb.from('app_admins').select('user_id').eq('user_id', CURRENT_USER.id).then(function(res) {
+      IS_ADMIN = !res.error && !!(res.data && res.data.length);
+      return IS_ADMIN;
+    }).catch(function() { IS_ADMIN = false; return false; });
+  }
+  function checkMyMembership(projectId) {
+    return sb.from('project_members').select('role,status').eq('project_id', projectId).eq('user_id', CURRENT_USER.id).then(function(res) {
+      var row = res.data && res.data[0];
+      // Older projects created before this feature shipped (or the columns
+      // not existing yet, pre-migration) fall back to fully-open access —
+      // never lock someone out just because role/status came back empty.
+      return {role: (row && row.role) || 'staff', status: (row && row.status) || 'approved'};
+    }).catch(function() { return {role: 'staff', status: 'approved'}; });
+  }
+  function canManageAssignments() { return IS_ADMIN || MY_ROLE === 'lead'; }
+  function updateRoleUi() {
+    var canManage = canManageAssignments();
+    assignInputs.forEach(function(inp) {
+      inp.disabled = !canManage;
+      inp.title = canManage ? '' : 'Chỉ Trưởng dự án / Admin mới gán được nhân viên cho mục việc này.';
+    });
+    document.querySelectorAll('.assignitembtn').forEach(function(btn) { btn.style.display = canManage ? '' : 'none'; });
+    var adminBtn = document.getElementById('btnAdminPanel');
+    if (adminBtn) adminBtn.style.display = IS_ADMIN ? '' : 'none';
+    var leadBtn = document.getElementById('btnLeadApprovals');
+    if (leadBtn) leadBtn.style.display = canManage ? '' : 'none';
+  }
 
   function showGateError(msg) { gateErrorEl.textContent = msg; }
   function setGateBusy(busy) {
@@ -3647,10 +3729,22 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     CURRENT_PROJECT = {id: id, name: name, code: code};
     saveLastProject(id, name);
     showGateError('');
-    gateOverlay.style.display = 'none';
-    var sel = document.getElementById('projectSwitcher');
-    if (sel) sel.value = id;
-    startProjectSync();
+    checkMyMembership(id).then(function(mem) {
+      MY_ROLE = mem.role; MY_STATUS = mem.status;
+      updateRoleUi();
+      if (MY_STATUS === 'pending') {
+        gateOverlay.style.display = 'none';
+        document.getElementById('pendingMsg').textContent = 'Bạn đã gửi yêu cầu vào dự án "' + name + '". Trưởng dự án (hoặc Admin) cần duyệt trước khi bạn xem/thao tác được dữ liệu. Vui lòng liên hệ họ, hoặc bấm "Kiểm tra lại" sau khi được duyệt.';
+        pendingOverlay.style.display = 'flex';
+        setSyncStatus('', 'Đang chờ duyệt: ' + name);
+        return;
+      }
+      pendingOverlay.style.display = 'none';
+      gateOverlay.style.display = 'none';
+      var sel = document.getElementById('projectSwitcher');
+      if (sel) sel.value = id;
+      startProjectSync();
+    });
   }
 
   function startProjectSync() {
@@ -3703,9 +3797,12 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     sb.rpc('join_project', {p_name: name, p_code: code}).then(function(res) {
       setGateBusy(false);
       if (res.error) {
-        var msg = (res.error.message || '').indexOf('WRONG_CODE') !== -1
+        var errMsg = res.error.message || '';
+        var msg = errMsg.indexOf('WRONG_CODE') !== -1
           ? ('Incorrect access code for project "' + name + '".')
-          : ('Could not connect: ' + res.error.message);
+          : errMsg.indexOf('PROJECT_NOT_FOUND_ADMIN_ONLY') !== -1
+          ? ('Dự án "' + name + '" chưa tồn tại. Chỉ Admin mới tạo được dự án mới — liên hệ Admin để được tạo dự án và chỉ định Trưởng dự án.')
+          : ('Could not connect: ' + errMsg);
         showGateError(msg);
         return;
       }
@@ -3891,6 +3988,119 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
   });
   document.getElementById('btnCloseDashboard').addEventListener('click', function() {
     document.getElementById('dashboardOverlay').style.display = 'none';
+  });
+
+  // ---- Lead approvals: staff who requested to join the CURRENT project and
+  // are still pending. Visible to the project's Lead(s) and to Admins. ----
+  function renderLeadApprovals() {
+    document.getElementById('leadProjectName').textContent = CURRENT_PROJECT ? CURRENT_PROJECT.name : '';
+    var listEl = document.getElementById('leadPendingList');
+    listEl.innerHTML = '<p class="dashempty">Đang tải...</p>';
+    if (!sb || !CURRENT_PROJECT) return;
+    sb.from('project_members').select('user_id').eq('project_id', CURRENT_PROJECT.id).eq('status', 'pending').then(function(res) {
+      var rows = res.data || [];
+      if (!rows.length) {
+        listEl.innerHTML = '<p class="dashempty">Không có ai đang chờ duyệt.</p>';
+        return;
+      }
+      var ids = rows.map(function(r) { return r.user_id; });
+      sb.from('profiles').select('user_id,display_name,email').in('user_id', ids).then(function(pres) {
+        var profiles = pres.data || [];
+        listEl.innerHTML = ids.map(function(uid) {
+          var p = profiles.filter(function(x) { return x.user_id === uid; })[0];
+          var label = p ? (esc(p.display_name || p.email || uid)) : esc(uid);
+          return '<div class="pendingrow" data-user="' + esc(uid) + '">' +
+            '<span>' + label + (p && p.email ? (' <span class="dashempty">(' + esc(p.email) + ')</span>') : '') + '</span>' +
+            '<span class="pendingrow-actions">' +
+              '<button type="button" class="toolbtn" data-approve="' + esc(uid) + '">✓ Duyệt</button>' +
+              '<button type="button" class="toolbtn danger" data-reject="' + esc(uid) + '">✕ Từ chối</button>' +
+            '</span></div>';
+        }).join('');
+      });
+    });
+  }
+  document.getElementById('leadPendingList').addEventListener('click', function(e) {
+    var approveBtn = e.target.closest('[data-approve]');
+    var rejectBtn = e.target.closest('[data-reject]');
+    if (!approveBtn && !rejectBtn) return;
+    if (!CURRENT_PROJECT) return;
+    var uid = (approveBtn || rejectBtn).getAttribute(approveBtn ? 'data-approve' : 'data-reject');
+    var rpcName = approveBtn ? 'approve_member' : 'reject_member';
+    sb.rpc(rpcName, {p_project_id: CURRENT_PROJECT.id, p_user_id: uid}).then(function(res) {
+      if (res.error) { alert('Lỗi: ' + res.error.message); return; }
+      renderLeadApprovals();
+    });
+  });
+  document.getElementById('btnLeadApprovals').addEventListener('click', function() {
+    renderLeadApprovals();
+    leadOverlay.style.display = 'flex';
+  });
+  document.getElementById('btnCloseLead').addEventListener('click', function() { leadOverlay.style.display = 'none'; });
+
+  // ---- Admin panel: every project + who its Lead is, with a search box to
+  // (re)assign the Lead. Admin-only (checked server-side via RLS/RPC too). ----
+  function renderAdminPanel() {
+    var listEl = document.getElementById('adminProjectsList');
+    listEl.innerHTML = '<p class="dashempty">Đang tải...</p>';
+    if (!sb) return;
+    sb.from('projects').select('id,name').then(function(pres) {
+      var projects = pres.data || [];
+      if (!projects.length) { listEl.innerHTML = '<p class="dashempty">Chưa có dự án nào. Tạo dự án mới qua nút "+ Join Project".</p>'; return; }
+      sb.from('project_members').select('project_id,user_id,role').eq('role', 'lead').then(function(mres) {
+        var leadRows = mres.data || [];
+        var leadIds = leadRows.map(function(r) { return r.user_id; });
+        var profilesP = leadIds.length ? sb.from('profiles').select('user_id,display_name,email').in('user_id', leadIds) : Promise.resolve({data: []});
+        profilesP.then(function(prof) {
+          var profiles = prof.data || [];
+          function nameFor(uid) {
+            var p = profiles.filter(function(x) { return x.user_id === uid; })[0];
+            return p ? (p.display_name || p.email || uid) : uid;
+          }
+          listEl.innerHTML = projects.map(function(proj) {
+            var leads = leadRows.filter(function(r) { return r.project_id === proj.id; }).map(function(r) { return nameFor(r.user_id); });
+            return '<div class="adminprojectrow" data-project="' + esc(proj.id) + '">' +
+              '<div><strong>' + esc(proj.name) + '</strong><br><span class="dashempty">Trưởng dự án hiện tại: ' + (leads.length ? esc(leads.join(', ')) : 'chưa có') + '</span></div>' +
+              '<div class="adminassignrow">' +
+                '<input type="email" class="adminleademail" data-project="' + esc(proj.id) + '" placeholder="email người sẽ làm Trưởng dự án" />' +
+                '<button type="button" class="toolbtn" data-setlead="' + esc(proj.id) + '">Đặt làm Trưởng dự án</button>' +
+              '</div></div>';
+          }).join('');
+        });
+      });
+    });
+  }
+  document.getElementById('adminProjectsList').addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-setlead]');
+    if (!btn) return;
+    var projectId = btn.getAttribute('data-setlead');
+    var emailInput = document.querySelector('.adminleademail[data-project="' + projectId + '"]');
+    var email = emailInput ? emailInput.value.trim() : '';
+    if (!email) { alert('Nhập email của người sẽ làm Trưởng dự án.'); return; }
+    sb.from('profiles').select('user_id').eq('email', email).then(function(res) {
+      var row = res.data && res.data[0];
+      if (!row) { alert('Không tìm thấy tài khoản với email này — người đó cần đăng ký (Sign Up) trong app trước.'); return; }
+      sb.rpc('admin_set_lead', {p_project_id: projectId, p_user_id: row.user_id}).then(function(res2) {
+        if (res2.error) { alert('Lỗi: ' + res2.error.message); return; }
+        renderAdminPanel();
+      });
+    });
+  });
+  document.getElementById('btnAdminPanel').addEventListener('click', function() {
+    renderAdminPanel();
+    adminOverlay.style.display = 'flex';
+  });
+  document.getElementById('btnCloseAdmin').addEventListener('click', function() { adminOverlay.style.display = 'none'; });
+
+  document.getElementById('pendingRecheckBtn').addEventListener('click', function() {
+    if (!CURRENT_PROJECT) return;
+    document.getElementById('pendingError').textContent = '';
+    openProject(CURRENT_PROJECT.id, CURRENT_PROJECT.name, CURRENT_PROJECT.code);
+  });
+  document.getElementById('pendingSwitchBtn').addEventListener('click', function() {
+    pendingOverlay.style.display = 'none';
+    gateNameEl.value = ''; gateCodeEl.value = '';
+    showGateError('');
+    gateOverlay.style.display = 'flex';
   });
 
   // ---- Bootstrap: resume an existing login session if there is one, otherwise
