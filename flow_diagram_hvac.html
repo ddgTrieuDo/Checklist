@@ -257,12 +257,6 @@
   .chkitem.singleconfirm .answeredby{opacity:.6;}
   .extraconfirm{margin:1px 0 4px 22px;}
   .extraconfirm .answeredby{margin:1px 0 0 0;}
-  .extraconfirmbtn{
-    font-size:10.5px;font-weight:600;line-height:1;
-    border:1px dashed var(--line);background:#fff;color:var(--accent);
-    padding:2px 8px;border-radius:20px;cursor:pointer;margin-top:2px;
-  }
-  .extraconfirmbtn:hover{background:#eef4fb;border-color:#cfe0f0;}
   .iteminlinenote{display:block;font-size:11px;font-style:italic;color:var(--sub);margin-top:2px;}
   .chkitem-row{display:flex;align-items:flex-start;gap:4px;}
   .chkitem-row .chkitem-shared{flex:1;}
@@ -399,7 +393,7 @@
   .dash-pending{font-size:10px;color:#8a5a12;margin-top:2px;}
   .answeredby{
     display:flex;align-items:baseline;flex-wrap:wrap;justify-content:space-between;gap:6px 10px;
-    font-size:10px;font-style:italic;color:#2c8a4e;
+    font-size:10px;font-style:italic;color:var(--green);
     margin:1px 0 0 22px;
   }
   .answeredby-text{flex:none;}
@@ -413,7 +407,7 @@
   .check2badge{
     flex:none;font-size:10px;font-weight:600;font-style:normal;line-height:1;white-space:nowrap;
     padding:1px 7px;border-radius:20px;
-    background:#eef0fb;color:#4438a8;border:1px solid #d9d7f2;
+    background:#e8f5ec;color:var(--green);border:1px solid #c9e6d3;
   }
   .check2badge-clickable{cursor:pointer;}
   .check2badge-clickable:hover{filter:brightness(0.95);}
@@ -2828,16 +2822,14 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
       return;
     }
     chkHost.classList.toggle('singleconfirm', list.length === 0);
+    // No explicit "+ Xác nhận thêm" button: clicking the already-checked
+    // shared checkbox itself records a second confirmation (see the third
+    // branch of handleSharedUncheck below), so a separate button is redundant.
     var rowsHtml = list.map(function(c) {
       return '<span class="answeredby"><span class="answeredby-text">✓ ' + esc(c.name) + (c.updated_at ? (' · ' + esc(formatWhen(c.updated_at))) : '') + '</span>' + check2BadgeHtml(el, c.name) + '</span>';
     }).join('');
-    var myOwnName = myName();
-    var originalBy = (itemMeta[itemId] && itemMeta[itemId].by) || '';
-    var canAdd = !!CURRENT_USER && list.length === 0 && myOwnName !== originalBy &&
-      !list.some(function(c) { return c.user_id === CURRENT_USER.id; });
-    var btnHtml = canAdd ? '<button type="button" class="extraconfirmbtn" data-item="' + itemId + '">+ Xác nhận thêm</button>' : '';
-    host.innerHTML = rowsHtml + btnHtml;
-    host.style.display = (rowsHtml || btnHtml) ? '' : 'none';
+    host.innerHTML = rowsHtml;
+    host.style.display = rowsHtml ? '' : 'none';
   }
   function refreshAllExtraConfirms() {
     checkboxes.forEach(function(cb) {
@@ -3006,8 +2998,8 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
 
     // I'm neither the primary confirmer nor an existing extra confirmer —
     // clicking an already-checked shared box isn't a withdrawal from me,
-    // it's me confirming this item too (same as the "+ Xác nhận thêm"
-    // button), so record it instead of wiping out someone else's work.
+    // it's me confirming this item too, so record it instead of wiping out
+    // someone else's work.
     if (CURRENT_USER) {
       el.checked = true;
       addExtraConfirm(id);
@@ -3015,11 +3007,6 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     }
     return false;
   }
-  document.addEventListener('click', function(e) {
-    var btn = e.target.closest('.extraconfirmbtn');
-    if (!btn) return;
-    addExtraConfirm(btn.getAttribute('data-item'));
-  });
 
   function renderItemAssignMode(itemId) {
     var el = elById[itemId];
