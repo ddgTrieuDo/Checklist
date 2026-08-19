@@ -279,6 +279,7 @@
   .assignedstatus{white-space:nowrap;}
   .assignedstatus-done{color:var(--green);}
   .assignedstatus-pending{color:var(--sub);opacity:.75;}
+  .assignedstatus-wrap{display:inline-flex;align-items:center;gap:4px;}
   .assignpopover{
     margin-top:6px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#fbfcfd;
     box-shadow:0 4px 14px rgba(16,24,32,.12);
@@ -2901,10 +2902,17 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
   }
   function refreshAllExtraConfirms() {
     checkboxes.forEach(function(cb) {
+      var id = idOf(cb);
+      if ((itemAssignees[id] || []).length) {
+        // Assigned items don't use the extra-confirm/answeredby path at all
+        // — re-render their own status list instead, so Check 2 badges show
+        // up once item_check2 has finished loading (this runs right after).
+        renderItemAssignMode(id);
+        return;
+      }
       if (cb.hasAttribute('data-daily')) return;
-      renderExtraConfirm(idOf(cb));
+      renderExtraConfirm(id);
       if (check2Eligible(cb)) {
-        var id = idOf(cb);
         var meta = itemMeta[id];
         setAnsweredByTag(cb, meta ? meta.by : '', meta ? formatWhen(meta.at) : '');
       }
@@ -2949,9 +2957,12 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
   function check2Eligible(el) {
     return el.tagName !== 'SELECT' && !el.hasAttribute('data-daily') && !(itemAssignees[idOf(el)] || []).length;
   }
-  function check2BadgeHtml(el, targetName) {
-    if (!targetName || !check2Eligible(el)) return '';
-    var itemId = idOf(el);
+  // Core badge/button markup, independent of check2Eligible so it can also
+  // be used for assigned items (each assignee's own confirmed tick can be
+  // Check-2'd by a teammate too, same as any other confirmation — see
+  // assignedStatusHtml below, which calls this directly).
+  function check2BadgeCore(itemId, targetName) {
+    if (!targetName) return '';
     var rec = itemCheck2[itemId + '|' + targetName];
     if (rec) {
       // Badges I authored myself stay full-color so my own Check 2 marks
@@ -2964,9 +2975,14 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
     if (!CURRENT_USER || myName() === targetName) return ''; // can't verify your own tick
     return '<button type="button" class="check2btn" data-check2-item="' + esc(itemId) + '" data-check2-target="' + esc(targetName) + '">+ Check 2</button>';
   }
+  function check2BadgeHtml(el, targetName) {
+    if (!check2Eligible(el)) return '';
+    return check2BadgeCore(idOf(el), targetName);
+  }
   function refreshCheck2ForItem(itemId) {
     var el = elById[itemId];
     if (!el) return;
+    if ((itemAssignees[itemId] || []).length) { renderItemAssignMode(itemId); return; }
     var meta = itemMeta[itemId];
     setAnsweredByTag(el, meta ? meta.by : '', meta ? formatWhen(meta.at) : '');
     renderExtraConfirm(itemId);
@@ -3093,7 +3109,7 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
   // permission, not just a UI hint). A small read-only line below shows each
   // assignee's own status so the team can still see who's done and who's
   // pending, without a separate clickable row per person.
-  function assignedStatusHtml(itemId, assignees, isDaily) {
+  function assignedStatusHtml(itemId, assignees, isDaily, allowCheck2) {
     return assignees.map(function(a) {
       var conf = itemConfirmations[itemId + '|' + a.user_id];
       // '1' for a checkbox, or any chosen option value for a status dropdown
@@ -3102,7 +3118,12 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
       var confirmed = confirmedRaw && (!isDaily || isToday(conf.updated_at));
       var whenTag = confirmed && conf.updated_at ? (' · ' + esc(formatWhen(conf.updated_at))) : '';
       var cls = 'assignedstatus ' + (confirmed ? 'assignedstatus-done' : 'assignedstatus-pending');
-      return '<span class="' + cls + '">' + (confirmed ? '✓' : '○') + ' ' + esc(a.name) + whenTag + '</span>';
+      var statusSpan = '<span class="' + cls + '">' + (confirmed ? '✓' : '○') + ' ' + esc(a.name) + whenTag + '</span>';
+      // Each assignee's own confirmed tick can still be peer-verified by a
+      // teammate ("Check 2"), same as before the single-checkbox redesign —
+      // just attached to their status line instead of a separate row.
+      var badge = (confirmed && allowCheck2) ? check2BadgeCore(itemId, a.name) : '';
+      return badge ? ('<span class="assignedstatus-wrap">' + statusSpan + badge + '</span>') : statusSpan;
     }).join('');
   }
   function renderCheckboxAssignMode(itemId, el) {
@@ -3124,7 +3145,7 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
     el.disabled = !isMe;
     if (btn) btn.classList.add('has-assignees');
     var isDaily = el.hasAttribute('data-daily');
-    multiEl.innerHTML = '<div class="assignedstatus-list">' + assignedStatusHtml(itemId, assignees, isDaily) + '</div>';
+    multiEl.innerHTML = '<div class="assignedstatus-list">' + assignedStatusHtml(itemId, assignees, isDaily, !isDaily) + '</div>';
     multiEl.style.display = 'block';
   }
   function renderDropdownAssignMode(itemId, selectEl) {
@@ -3144,7 +3165,9 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
     }
     var isMe = !!(CURRENT_USER && assignees.some(function(a) { return a.user_id === CURRENT_USER.id; }));
     selectEl.disabled = !isMe;
-    multiDiv.innerHTML = '<div class="scopecell-assignedstatus">' + assignedStatusHtml(itemId, assignees, false) + '</div>';
+    // Dropdown/status items never carry Check 2 (same rule as non-assigned
+    // dropdown items — Check 2 is only meaningful for a simple yes/no tick).
+    multiDiv.innerHTML = '<div class="scopecell-assignedstatus">' + assignedStatusHtml(itemId, assignees, false, false) + '</div>';
     multiDiv.style.display = 'block';
   }
   function syncSharedCheckboxFromConfirmations(itemId) {
