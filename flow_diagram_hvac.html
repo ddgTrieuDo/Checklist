@@ -256,7 +256,7 @@
   .chkitem.singleconfirm .chkrow input:checked ~ span{color:#9a8f6e;text-decoration-color:#e0d6b0;}
   .chkitem.singleconfirm .answeredby{opacity:.6;}
   .extraconfirm{margin:1px 0 4px 22px;}
-  .extraconfirm .answeredby{display:block;margin:1px 0 0 0;}
+  .extraconfirm .answeredby{margin:1px 0 0 0;}
   .extraconfirmbtn{
     font-size:10.5px;font-weight:600;line-height:1;
     border:1px dashed var(--line);background:#fff;color:var(--accent);
@@ -398,10 +398,25 @@
   .dashempty{font-size:12px;color:var(--sub);font-style:italic;}
   .dash-pending{font-size:10px;color:#8a5a12;margin-top:2px;}
   .answeredby{
-    display:block;font-size:10px;font-style:italic;color:#2c8a4e;
+    display:flex;align-items:baseline;flex-wrap:wrap;justify-content:space-between;gap:6px 10px;
+    font-size:10px;font-style:italic;color:#2c8a4e;
     margin:1px 0 0 22px;
   }
+  .answeredby-text{flex:none;}
   .fieldrow .answeredby, .scopecell .answeredby{margin-left:0;margin-top:3px;}
+  .check2btn{
+    flex:none;font-size:10px;font-weight:600;font-style:normal;line-height:1;white-space:nowrap;
+    border:1px dashed var(--line);background:#fff;color:var(--accent);
+    padding:1px 7px;border-radius:20px;cursor:pointer;
+  }
+  .check2btn:hover{background:#eef4fb;border-color:#cfe0f0;}
+  .check2badge{
+    flex:none;font-size:10px;font-weight:600;font-style:normal;line-height:1;white-space:nowrap;
+    padding:1px 7px;border-radius:20px;
+    background:#eef0fb;color:#4438a8;border:1px solid #d9d7f2;
+  }
+  .check2badge-clickable{cursor:pointer;}
+  .check2badge-clickable:hover{filter:brightness(0.95);}
   @media print {
     .navbar{position:static;}
     .tradebar{position:static;display:none;}
@@ -2378,10 +2393,10 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     var tag = host.querySelector('.answeredby');
     if (!tag) return;
     if (by || when) {
-      tag.textContent = '✓ ' + (by || 'Anonymous') + (when ? (' · ' + when) : '');
+      tag.innerHTML = '<span class="answeredby-text">✓ ' + esc(by || 'Anonymous') + (when ? (' · ' + esc(when)) : '') + '</span>' + check2BadgeHtml(el, by);
       tag.style.display = '';
     } else {
-      tag.textContent = '';
+      tag.innerHTML = '';
       tag.style.display = 'none';
     }
   }
@@ -2539,7 +2554,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     setAnsweredByTag(el, v !== '' ? worker : '', v !== '' ? formatWhen(nowIso) : '');
     if (v !== '') { itemMeta[id] = {by: worker, at: nowIso}; } else { delete itemMeta[id]; }
     applyDailyState(el);
-    if (v === '') { clearExtraChecks(id, true); } else { renderExtraConfirm(id); }
+    if (v === '') { clearExtraChecks(id, true); clearAllCheck2ForItem(id); } else { renderExtraConfirm(id); }
     var row = { project_id: CURRENT_PROJECT.id, item_id: id, value: v, updated_by: worker, updated_at: nowIso };
     sb.from('progress').upsert(row).then(function(res) {
       if (res.error) { setSyncStatus('err', 'Sync error: ' + res.error.message); }
@@ -2561,7 +2576,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
       setAnsweredByTag(el, v !== '' ? worker : '', v !== '' ? formatWhen(nowIso) : '');
       if (v !== '') { itemMeta[id] = {by: worker, at: nowIso}; } else { delete itemMeta[id]; }
       applyDailyState(el);
-      if (v === '') { clearExtraChecks(id, true); } else { renderExtraConfirm(id); }
+      if (v === '') { clearExtraChecks(id, true); clearAllCheck2ForItem(id); } else { renderExtraConfirm(id); }
       rows.push({ project_id: CURRENT_PROJECT.id, item_id: id, value: v, updated_by: worker, updated_at: nowIso });
     });
     updateProgress();
@@ -2581,9 +2596,11 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     });
     sb.from('item_confirmations').delete().eq('project_id', CURRENT_PROJECT.id).then(function() {});
     sb.from('item_extra_checks').delete().eq('project_id', CURRENT_PROJECT.id).then(function() {});
+    sb.from('item_check2').delete().eq('project_id', CURRENT_PROJECT.id).then(function() {});
     itemMeta = {};
     itemConfirmations = {};
     itemExtraChecks = {};
+    itemCheck2 = {};
     Object.keys(itemAssignees).forEach(function(itemId) {
       renderItemAssignMode(itemId);
       syncSharedCheckboxFromConfirmations(itemId);
@@ -2812,7 +2829,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     }
     chkHost.classList.toggle('singleconfirm', list.length === 0);
     var rowsHtml = list.map(function(c) {
-      return '<span class="answeredby">✓ ' + esc(c.name) + (c.updated_at ? (' · ' + formatWhen(c.updated_at)) : '') + '</span>';
+      return '<span class="answeredby"><span class="answeredby-text">✓ ' + esc(c.name) + (c.updated_at ? (' · ' + esc(formatWhen(c.updated_at))) : '') + '</span>' + check2BadgeHtml(el, c.name) + '</span>';
     }).join('');
     var myOwnName = myName();
     var originalBy = (itemMeta[itemId] && itemMeta[itemId].by) || '';
@@ -2823,7 +2840,15 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     host.style.display = (rowsHtml || btnHtml) ? '' : 'none';
   }
   function refreshAllExtraConfirms() {
-    checkboxes.forEach(function(cb) { if (!cb.hasAttribute('data-daily')) renderExtraConfirm(idOf(cb)); });
+    checkboxes.forEach(function(cb) {
+      if (cb.hasAttribute('data-daily')) return;
+      renderExtraConfirm(idOf(cb));
+      if (check2Eligible(cb)) {
+        var id = idOf(cb);
+        var meta = itemMeta[id];
+        setAnsweredByTag(cb, meta ? meta.by : '', meta ? formatWhen(meta.at) : '');
+      }
+    });
   }
   function addExtraConfirm(itemId) {
     if (!sb || !CURRENT_PROJECT || !CURRENT_USER) return;
@@ -2850,6 +2875,87 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
       sb.from('item_extra_checks').delete().eq('project_id', CURRENT_PROJECT.id).eq('item_id', itemId).then(function() {});
     }
   }
+
+  // =========================================================================
+  // Check 2 (peer verification per confirmer). Each individual confirmation
+  // on an item — the primary tick or an extra confirmer's tick — can be
+  // separately verified by ANY other teammate (never by the same person
+  // confirming their own tick). Purely an additional audit trail using its
+  // own table (item_check2), keyed by (item, confirmer name) rather than by
+  // role, so it survives promotions/withdrawals and never affects %/Check All.
+  // =========================================================================
+  var itemCheck2 = {}; // "itemId|targetName" -> {reviewer_user_id, reviewer_name, updated_at}
+
+  function check2Eligible(el) {
+    return el.tagName !== 'SELECT' && !el.hasAttribute('data-daily') && !(itemAssignees[idOf(el)] || []).length;
+  }
+  function check2BadgeHtml(el, targetName) {
+    if (!targetName || !check2Eligible(el)) return '';
+    var itemId = idOf(el);
+    var rec = itemCheck2[itemId + '|' + targetName];
+    if (rec) {
+      var canToggleOff = !!CURRENT_USER && rec.reviewer_user_id === CURRENT_USER.id;
+      return '<span class="check2badge' + (canToggleOff ? ' check2badge-clickable' : '') + '" data-check2-item="' + esc(itemId) + '" data-check2-target="' + esc(targetName) + '">🔍 Check 2: ' + esc(rec.reviewer_name) + '</span>';
+    }
+    if (!CURRENT_USER || myName() === targetName) return ''; // can't verify your own tick
+    return '<button type="button" class="check2btn" data-check2-item="' + esc(itemId) + '" data-check2-target="' + esc(targetName) + '">+ Check 2</button>';
+  }
+  function refreshCheck2ForItem(itemId) {
+    var el = elById[itemId];
+    if (!el) return;
+    var meta = itemMeta[itemId];
+    setAnsweredByTag(el, meta ? meta.by : '', meta ? formatWhen(meta.at) : '');
+    renderExtraConfirm(itemId);
+  }
+  function loadItemCheck2() {
+    return sb.from('item_check2').select('item_id,target_name,reviewer_user_id,reviewer_name,updated_at').eq('project_id', CURRENT_PROJECT.id).then(function(res) {
+      itemCheck2 = {};
+      if (res.error) return; // table optional on older projects — feature just stays off
+      (res.data || []).forEach(function(row) {
+        itemCheck2[row.item_id + '|' + row.target_name] = {reviewer_user_id: row.reviewer_user_id, reviewer_name: row.reviewer_name, updated_at: row.updated_at};
+      });
+    });
+  }
+  function saveCheck2(itemId, targetName) {
+    if (!sb || !CURRENT_PROJECT || !CURRENT_USER || !itemId || !targetName || myName() === targetName) return;
+    var nowIso = new Date().toISOString();
+    var reviewerName = myName();
+    itemCheck2[itemId + '|' + targetName] = {reviewer_user_id: CURRENT_USER.id, reviewer_name: reviewerName, updated_at: nowIso};
+    refreshCheck2ForItem(itemId);
+    cacheProjectLocally();
+    sb.from('item_check2').upsert({
+      project_id: CURRENT_PROJECT.id, item_id: itemId, target_name: targetName,
+      reviewer_user_id: CURRENT_USER.id, reviewer_name: reviewerName, updated_at: nowIso
+    }).then(function(res) {
+      if (res.error) { setSyncStatus('err', 'Check 2 error: ' + res.error.message); }
+      else { setSyncStatus('ok', 'Synced: ' + CURRENT_PROJECT.name); }
+    });
+  }
+  function clearCheck2(itemId, targetName) {
+    var key = itemId + '|' + targetName;
+    if (!itemCheck2[key]) return;
+    delete itemCheck2[key];
+    refreshCheck2ForItem(itemId);
+    if (sb && CURRENT_PROJECT) {
+      sb.from('item_check2').delete().eq('project_id', CURRENT_PROJECT.id).eq('item_id', itemId).eq('target_name', targetName).then(function() {});
+    }
+  }
+  function clearAllCheck2ForItem(itemId) {
+    var changed = false;
+    Object.keys(itemCheck2).forEach(function(key) {
+      if (key.indexOf(itemId + '|') === 0) { delete itemCheck2[key]; changed = true; }
+    });
+    if (changed && sb && CURRENT_PROJECT) {
+      sb.from('item_check2').delete().eq('project_id', CURRENT_PROJECT.id).eq('item_id', itemId).then(function() {});
+    }
+  }
+  document.addEventListener('click', function(e) {
+    var addBtn = e.target.closest('.check2btn');
+    if (addBtn) { saveCheck2(addBtn.getAttribute('data-check2-item'), addBtn.getAttribute('data-check2-target')); return; }
+    var badge = e.target.closest('.check2badge-clickable');
+    if (badge) { clearCheck2(badge.getAttribute('data-check2-item'), badge.getAttribute('data-check2-target')); return; }
+  });
+
   // A shared (non-"Giao cho"-assigned) checkbox can carry more than one
   // person's confirmation — the "primary" progress row plus an optional
   // extra confirmer. Whoever physically unchecks the box should only ever
@@ -2870,6 +2976,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
       itemExtraChecks[id] = extra.slice(0, myExtraIdx).concat(extra.slice(myExtraIdx + 1));
       el.checked = true;
       renderExtraConfirm(id);
+      clearCheck2(id, mine.name); // my tick is gone — any "Check 2" mark verifying it no longer applies
       if (sb && CURRENT_PROJECT) {
         sb.from('item_extra_checks').delete().eq('project_id', CURRENT_PROJECT.id).eq('item_id', id).eq('user_id', mine.user_id).then(function() {});
       }
@@ -2887,6 +2994,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
         el.checked = true;
         setAnsweredByTag(el, promoted.name, formatWhen(promoted.updated_at));
         renderExtraConfirm(id);
+        clearCheck2(id, primaryName); // my tick is gone — any "Check 2" mark verifying it no longer applies
         if (sb && CURRENT_PROJECT) {
           sb.from('progress').upsert({project_id: CURRENT_PROJECT.id, item_id: id, value: '1', updated_by: promoted.name, updated_at: promoted.updated_at}).then(function() {});
           sb.from('item_extra_checks').delete().eq('project_id', CURRENT_PROJECT.id).eq('item_id', id).eq('user_id', promoted.user_id).then(function() {});
@@ -3203,6 +3311,14 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
           }
         }
         renderExtraConfirm(itemId);
+      })
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'item_check2', filter: 'project_id=eq.' + CURRENT_PROJECT.id}, function(payload) {
+        var row = (payload.new && Object.keys(payload.new).length) ? payload.new : payload.old;
+        if (!row) return;
+        var key = row.item_id + '|' + row.target_name;
+        if (payload.eventType === 'DELETE') { delete itemCheck2[key]; }
+        else { itemCheck2[key] = {reviewer_user_id: row.reviewer_user_id, reviewer_name: row.reviewer_name, updated_at: row.updated_at}; }
+        refreshCheck2ForItem(row.item_id);
       })
       .on('postgres_changes', {event: 'INSERT', schema: 'public', table: 'project_members', filter: 'project_id=eq.' + CURRENT_PROJECT.id}, function(payload) {
         var row = payload.new;
@@ -3568,12 +3684,14 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     }).catch(function() { /* item_assignees/item_confirmations/assignments tables optional on older projects */ });
     // Second-confirmer names need PROJECT_MEMBERS populated first (to resolve
     // user_id -> display name), so chain after the members load rather than
-    // racing it in parallel.
+    // racing it in parallel. Check-2 records store the reviewer's name
+    // directly (no lookup needed) but are loaded alongside so the first
+    // render already has both extra-confirm rows and their Check-2 badges.
     membersChain.then(function() {
-      return loadItemExtraChecks();
+      return Promise.all([loadItemExtraChecks(), loadItemCheck2()]);
     }).then(function() {
       refreshAllExtraConfirms();
-    }).catch(function() { /* item_extra_checks table optional on older projects */ });
+    }).catch(function() { /* item_extra_checks/item_check2 tables optional on older projects */ });
     loadInitialProgress().then(function() {
       refreshAllExtraConfirms();
       subscribeRealtime();
