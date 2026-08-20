@@ -414,9 +414,17 @@
   .pendingrow-actions{display:flex;gap:6px;flex:none;}
   .tradecheckboxes{display:flex;flex-wrap:wrap;gap:4px 10px;flex:1 1 auto;min-width:220px;}
   .tradecheckbox{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--sub);white-space:nowrap;}
-  .adminprojectrow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .adminprojectrow{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;}
   .adminassignrow{display:flex;gap:6px;flex:none;}
   .adminleademail{font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;min-width:200px;}
+  .adminscopetoggle{display:flex;}
+  .adminscopepanel{background:#f8f9fb;border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
+  .scopetrades{display:flex;flex-direction:column;gap:8px;}
+  .scopetraderow{border-bottom:1px dashed var(--line);padding-bottom:6px;}
+  .scopetraderow:last-child{border-bottom:none;padding-bottom:0;}
+  .scopetradecb{display:flex;align-items:center;gap:6px;font-size:12.5px;}
+  .scopephases{display:flex;flex-wrap:wrap;gap:4px 12px;margin:6px 0 0 22px;}
+  .scopephasecb{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--sub);white-space:nowrap;}
   .answeredby{
     display:flex;align-items:baseline;flex-wrap:wrap;justify-content:space-between;gap:6px 10px;
     font-size:10px;font-style:italic;color:var(--green);
@@ -544,24 +552,24 @@
 
 <div class="tradebar">
   <span class="tradebar-label">Ngành:</span>
-  <a href="index.html" class="tradelink">Plumbing</a>
-    <span class="tradelink tradelink-active">HVAC</span>
-    <a href="flow_diagram_mp.html" class="tradelink">Mechanical Piping</a>
-    <a href="flow_diagram_fp.html" class="tradelink">Fire Protection</a>
-    <a href="flow_diagram_el.html" class="tradelink">Electrical</a>
+  <a href="index.html" class="tradelink" data-trade="plumbing">Plumbing</a>
+    <span class="tradelink tradelink-active" data-trade="hvac">HVAC</span>
+    <a href="flow_diagram_mp.html" class="tradelink" data-trade="mp">Mechanical Piping</a>
+    <a href="flow_diagram_fp.html" class="tradelink" data-trade="fp">Fire Protection</a>
+    <a href="flow_diagram_el.html" class="tradelink" data-trade="el">Electrical</a>
 </div>
 <div class="navbar">
   <div class="navlinks">
     <a href="#top" class="navlink">↑ Overview</a>
-    <a href="#phase01" class="navlink">PHASE 01 – Project Setup</a>
-<a href="#phase02" class="navlink">PHASE 02 – Modeling</a>
-<a href="#phase03" class="navlink">PHASE 03 – Engineering &amp; Supports</a>
-<a href="#phase04" class="navlink">PHASE 04 – Coordination</a>
-<a href="#phase05" class="navlink">PHASE 05 – Trimble / Field Layout</a>
-<a href="#phase06" class="navlink">PHASE 06 – Duct Fabrication</a>
-<a href="#phase07" class="navlink">PHASE 07 – BOM / Reports</a>
-<a href="#phase08" class="navlink">PHASE 08 – Shop Duct Drawings</a>
-<a href="#phase09" class="navlink">PHASE 09 – QC / Final Review</a>
+    <a href="#phase01" class="navlink" data-phase="01">PHASE 01 – Project Setup</a>
+<a href="#phase02" class="navlink" data-phase="02">PHASE 02 – Modeling</a>
+<a href="#phase03" class="navlink" data-phase="03">PHASE 03 – Engineering &amp; Supports</a>
+<a href="#phase04" class="navlink" data-phase="04">PHASE 04 – Coordination</a>
+<a href="#phase05" class="navlink" data-phase="05">PHASE 05 – Trimble / Field Layout</a>
+<a href="#phase06" class="navlink" data-phase="06">PHASE 06 – Duct Fabrication</a>
+<a href="#phase07" class="navlink" data-phase="07">PHASE 07 – BOM / Reports</a>
+<a href="#phase08" class="navlink" data-phase="08">PHASE 08 – Shop Duct Drawings</a>
+<a href="#phase09" class="navlink" data-phase="09">PHASE 09 – QC / Final Review</a>
   </div>
   <div class="toolbar">
     <div class="progresswrap">
@@ -582,6 +590,9 @@
   </div>
 </div>
 <div class="wrap">
+  <div class="tradelockbanner" id="tradeScopeBanner" style="display:none;">
+    🚫 Ngành <b>HVAC</b> KHÔNG thuộc phạm vi dự án hiện tại (Admin chưa chọn ngành này cho dự án) — mọi ô tích/dropdown/nút thao tác trên trang này đã bị khoá.
+  </div>
   <div class="tradelockbanner" id="tradeLockBanner" style="display:none;">
     🔒 Bạn chỉ có quyền <b>XEM</b> ngành <b>HVAC</b> trong dự án này — mọi ô tích/dropdown/nút thao tác trên trang này đã bị khoá. Liên hệ Trưởng dự án hoặc Admin nếu bạn cần được cấp quyền sửa ngành này.
   </div>
@@ -658,7 +669,7 @@
   </div>
 
   
-  <div class="card phasecard" id="phase01">
+  <div class="card phasecard" id="phase01" data-phase="01">
     <h2><span class="tag">PHASE 01</span> Project Setup <span class="entitle">(Thiết lập dự án)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="01">☑ Check All Phase</button>
       <span class="itemcount" data-phasecount="01" data-total="142">0/142 completed</span>
@@ -854,7 +865,7 @@
   </div>
 
 
-  <div class="card phasecard" id="phase02">
+  <div class="card phasecard" id="phase02" data-phase="02">
     <h2><span class="tag">PHASE 02</span> Modeling <span class="entitle">(Dựng Model)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="02">☑ Check All Phase</button>
       <span class="itemcount" data-phasecount="02" data-total="213">0/213 completed</span>
@@ -1139,7 +1150,7 @@
   </div>
 
 
-  <div class="card phasecard" id="phase03">
+  <div class="card phasecard" id="phase03" data-phase="03">
     <h2><span class="tag">PHASE 03</span> Engineering &amp; Supports <span class="entitle">(Kỹ thuật &amp; Giá đỡ)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="03">☑ Check All Phase</button>
       <span class="itemcount" data-phasecount="03" data-total="88">0/88 completed</span>
@@ -1275,7 +1286,7 @@
   </div>
 
 
-  <div class="card phasecard" id="phase04">
+  <div class="card phasecard" id="phase04" data-phase="04">
     <h2><span class="tag">PHASE 04</span> Coordination <span class="entitle">(Phối hợp)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="04">☑ Check All Phase</button>
       <span class="itemcount" data-phasecount="04" data-total="80">0/80 completed</span>
@@ -1388,7 +1399,7 @@ CONTRACT → ĐIỀU KIỆN THỰC TẾ → MÂU THUẪN → PHƯƠNG ÁN ĐỀ 
   </div>
 
 
-  <div class="card phasecard" id="phase05">
+  <div class="card phasecard" id="phase05" data-phase="05">
     <h2><span class="tag">PHASE 05</span> Trimble / Field Layout <span class="entitle">(Trimble / Layout hiện trường)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="05">☑ Check All Phase</button>
       <span class="itemcount" data-phasecount="05" data-total="66">0/66 completed</span>
@@ -1492,7 +1503,7 @@ CONTRACT → ĐIỀU KIỆN THỰC TẾ → MÂU THUẪN → PHƯƠNG ÁN ĐỀ 
   </div>
 
 
-  <div class="card phasecard" id="phase06">
+  <div class="card phasecard" id="phase06" data-phase="06">
     <h2><span class="tag">PHASE 06</span> Duct Fabrication <span class="entitle">(Chế tạo Duct)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="06">☑ Check All Phase</button>
       <span class="itemcount" data-phasecount="06" data-total="71">0/71 completed</span>
@@ -1604,7 +1615,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
   </div>
 
 
-  <div class="card phasecard" id="phase07">
+  <div class="card phasecard" id="phase07" data-phase="07">
     <h2><span class="tag">PHASE 07</span> BOM / Reports <span class="entitle">(BOM / Báo cáo)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="07">☑ Check All Phase</button>
       <span class="itemcount" data-phasecount="07" data-total="47">0/47 completed</span>
@@ -1677,7 +1688,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
   </div>
 
 
-  <div class="card phasecard" id="phase08">
+  <div class="card phasecard" id="phase08" data-phase="08">
     <h2><span class="tag">PHASE 08</span> Shop Duct Drawings <span class="entitle">(Bản vẽ Shop Duct)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="08">☑ Check All Phase</button>
       <span class="itemcount" data-phasecount="08" data-total="358">0/358 completed</span>
@@ -2159,7 +2170,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
   </div>
 
 
-  <div class="card phasecard" id="phase09">
+  <div class="card phasecard" id="phase09" data-phase="09">
     <h2><span class="tag">PHASE 09</span> QC / Final Review <span class="entitle">(QC / Rà soát cuối)</span>
       <button type="button" class="checkallbtn checkallbtn-phase" data-scope="phase" data-target="09">☑ Check All Phase</button>
       <span class="itemcount" data-phasecount="09" data-total="154">0/154 completed</span>
@@ -2427,6 +2438,15 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
   // exact same rule, so this is a real permission, not just a UI hint.
   var MY_TRADES = [];
   var CAN_EDIT_THIS_TRADE = true;
+  // Project-level scope (Admin-configured, applies to EVERYONE — staff, Lead,
+  // even Admin's own view — unlike MY_TRADES which is per-person). null means
+  // "not configured for this project" = everything enabled (the default, so
+  // every project that existed before this feature keeps working unchanged).
+  // PROJECT_TRADES_ENABLED: which of the 5 trades this project actually uses.
+  // PROJECT_PHASES_ENABLED: which PHASE 01-09 this project uses, for THIS
+  // trade specifically (each trade's phase list is configured separately).
+  var PROJECT_TRADES_ENABLED = null;  // null | ['plumbing','hvac',...]
+  var PROJECT_PHASES_ENABLED = null;  // null | ['01','03',...]
   var realtimeChannel = null;
   var suppressRemote = false;  // true while applying a remote/initial update, to avoid write-back loops
   var CLIENT_ID = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -2608,6 +2628,9 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
       if (el.tagName === 'SELECT') { el.classList.toggle('answered', el.value !== ''); syncStatusDropColor(el); }
       if (el.hasAttribute('data-daily')) return; // recurring habit, not a % milestone — excluded from all stats
       var p = el.getAttribute('data-phase');
+      // Phase not enabled for the current project (Admin-configured project
+      // scope) — excluded from every stat, same treatment as data-daily above.
+      if (PROJECT_PHASES_ENABLED && PROJECT_PHASES_ENABLED.indexOf(p) === -1) return;
       var pnl = el.getAttribute('data-panel');
       byPhase[p] = byPhase[p] || {checked:0, total:0};
       byPanel[pnl] = byPanel[pnl] || {checked:0, total:0};
@@ -3742,6 +3765,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     MY_PROJECTS = [];
     IS_ADMIN = false; MY_ROLE = 'staff'; MY_STATUS = 'approved';
     MY_TRADES = []; CAN_EDIT_THIS_TRADE = true;
+    PROJECT_TRADES_ENABLED = null; PROJECT_PHASES_ENABLED = null;
     clearLastProject();
     if (sb) sb.auth.signOut();
     gateNameEl.value = ''; gateCodeEl.value = '';
@@ -3812,6 +3836,56 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     document.querySelectorAll('.checkallbtn').forEach(function(btn) { btn.disabled = !CAN_EDIT_THIS_TRADE; });
     if (resetBtn) resetBtn.disabled = !CAN_EDIT_THIS_TRADE;
   }
+  // Project-level scope (Admin-configured — which trades/phases a project
+  // actually uses). Applies to EVERYONE the same way, including Admin's own
+  // view — unlike MY_TRADES/CAN_EDIT_THIS_TRADE above, which is per-person.
+  // Zero rows for a project = never configured = everything enabled (safe
+  // default so every project that existed before this feature keeps working
+  // exactly as before).
+  function checkProjectScope(projectId) {
+    var tradesP = sb.from('project_trades').select('trade').eq('project_id', projectId).then(function(res) {
+      var rows = res.error ? [] : (res.data || []);
+      PROJECT_TRADES_ENABLED = rows.length ? rows.map(function(r) { return r.trade; }) : null;
+    }).catch(function() { PROJECT_TRADES_ENABLED = null; });
+    var phasesP = sb.from('project_trade_phases').select('phase').eq('project_id', projectId).eq('trade', THIS_TRADE).then(function(res) {
+      var rows = res.error ? [] : (res.data || []);
+      PROJECT_PHASES_ENABLED = rows.length ? rows.map(function(r) { return r.phase; }) : null;
+    }).catch(function() { PROJECT_PHASES_ENABLED = null; });
+    return Promise.all([tradesP, phasesP]);
+  }
+  function applyProjectScopeUi() {
+    var thisTradeEnabled = !PROJECT_TRADES_ENABLED || PROJECT_TRADES_ENABLED.indexOf(THIS_TRADE) !== -1;
+    document.querySelectorAll('.tradelink[data-trade]').forEach(function(el) {
+      var t = el.getAttribute('data-trade');
+      el.style.display = (!PROJECT_TRADES_ENABLED || PROJECT_TRADES_ENABLED.indexOf(t) !== -1) ? '' : 'none';
+    });
+    document.querySelectorAll('.navlink[data-phase]').forEach(function(el) {
+      var p = el.getAttribute('data-phase');
+      el.style.display = (!PROJECT_PHASES_ENABLED || PROJECT_PHASES_ENABLED.indexOf(p) !== -1) ? '' : 'none';
+    });
+    document.querySelectorAll('.phasecard[data-phase]').forEach(function(el) {
+      var p = el.getAttribute('data-phase');
+      el.style.display = (!PROJECT_PHASES_ENABLED || PROJECT_PHASES_ENABLED.indexOf(p) !== -1) ? '' : 'none';
+    });
+    // % completion / progress bars must only count items in enabled phases —
+    // recompute the denominator (TOTAL) and re-run updateProgress(), whose
+    // own per-item loop also skips disabled-phase items (see PROJECT_PHASES_ENABLED
+    // check inside updateProgress).
+    TOTAL = allEls.filter(function(el) {
+      if (el.hasAttribute('data-daily')) return false;
+      if (PROJECT_PHASES_ENABLED && PROJECT_PHASES_ENABLED.indexOf(el.getAttribute('data-phase')) === -1) return false;
+      return true;
+    }).length;
+    var scopeBanner = document.getElementById('tradeScopeBanner');
+    if (scopeBanner) scopeBanner.style.display = thisTradeEnabled ? 'none' : 'flex';
+    if (!thisTradeEnabled) {
+      CAN_EDIT_THIS_TRADE = false;
+      applyTradeLockUi();
+      var lockBanner = document.getElementById('tradeLockBanner');
+      if (lockBanner) lockBanner.style.display = 'none'; // scope banner already explains it — avoid showing both
+    }
+    updateProgress();
+  }
   function updateRoleUi() {
     var canManage = canManageAssignments();
     assignInputs.forEach(function(inp) {
@@ -3859,7 +3933,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     });
   }
 
-  function openProject(id, name, code) {
+  function openProject(id, name, code, onReady) {
     if (realtimeChannel && sb) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
     CURRENT_PROJECT = {id: id, name: name, code: code};
     saveLastProject(id, name);
@@ -3878,9 +3952,11 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
       gateOverlay.style.display = 'none';
       var sel = document.getElementById('projectSwitcher');
       if (sel) sel.value = id;
-      checkMyTrades(id).then(function() {
+      Promise.all([checkMyTrades(id), checkProjectScope(id)]).then(function() {
         applyTradeLockUi();
+        applyProjectScopeUi();
         startProjectSync();
+        if (onReady) onReady();
       });
     });
   }
@@ -3945,7 +4021,19 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
         return;
       }
       refreshMyProjects().then(function() {
-        openProject(res.data, name, code);
+        openProject(res.data, name, code, function() {
+          // Only project CREATION (not joining an existing one) makes the
+          // creator its Lead automatically — so Admin + freshly-made 'lead'
+          // here reliably means "I just created this project." Nudge them
+          // straight to configuring its Ngành & Phase scope.
+          if (IS_ADMIN && MY_ROLE === 'lead') {
+            renderAdminPanel();
+            adminOverlay.style.display = 'flex';
+            setTimeout(function() {
+              alert('Dự án "' + name + '" đã được tạo. Hãy chọn (các) Ngành và Phase sẽ dùng cho dự án này bên dưới — bấm "⚙️ Ngành & Phase của dự án" ở đúng dòng dự án. Mặc định là dùng TẤT CẢ ngành/phase cho đến khi bạn thu hẹp lại.');
+            }, 50);
+          }
+        });
       });
     }).catch(function(err) {
       setGateBusy(false);
@@ -4232,8 +4320,27 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
   });
   document.getElementById('btnCloseLead').addEventListener('click', function() { leadOverlay.style.display = 'none'; });
 
+  // Renders the 5-trade + (per enabled trade) 9-phase checkbox picker used
+  // in the Admin panel's per-project "⚙️ Ngành & Phase" section. enabledTrades
+  // is null (everything on) or an array of trade keys; phasesByTrade maps
+  // trade key -> null (everything on) or array of phase strings ('01'..'09').
+  function scopeCheckboxesHtml(projectId, enabledTrades, phasesByTrade) {
+    return TRADE_LIST.map(function(t) {
+      var tradeOn = !enabledTrades || enabledTrades.indexOf(t.key) !== -1;
+      var phasesForTrade = phasesByTrade[t.key] || null;
+      var phaseBoxes = Object.keys(PHASE_TITLES).sort().map(function(p) {
+        var phaseOn = !phasesForTrade || phasesForTrade.indexOf(p) !== -1;
+        return '<label class="scopephasecb"><input type="checkbox" class="scopephase" data-project="' + esc(projectId) + '" data-trade="' + esc(t.key) + '" data-phase="' + esc(p) + '"' + (phaseOn ? ' checked' : '') + '> Phase ' + esc(p) + '</label>';
+      }).join('');
+      return '<div class="scopetraderow">' +
+        '<label class="scopetradecb"><input type="checkbox" class="scopetrade" data-project="' + esc(projectId) + '" data-trade="' + esc(t.key) + '"' + (tradeOn ? ' checked' : '') + '> <b>' + esc(t.label) + '</b></label>' +
+        '<div class="scopephases" data-scopephases="' + esc(t.key) + '" style="display:' + (tradeOn ? '' : 'none') + '">' + phaseBoxes + '</div>' +
+      '</div>';
+    }).join('');
+  }
   // ---- Admin panel: every project + who its Lead is, with a search box to
-  // (re)assign the Lead. Admin-only (checked server-side via RLS/RPC too). ----
+  // (re)assign the Lead, plus which trades/phases each project actually uses.
+  // Admin-only (checked server-side via RLS/RPC too). ----
   function renderAdminPanel() {
     var listEl = document.getElementById('adminProjectsList');
     listEl.innerHTML = '<p class="dashempty">Đang tải...</p>';
@@ -4241,8 +4348,13 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     sb.from('projects').select('id,name').then(function(pres) {
       var projects = pres.data || [];
       if (!projects.length) { listEl.innerHTML = '<p class="dashempty">Chưa có dự án nào. Tạo dự án mới qua nút "+ Join Project".</p>'; return; }
-      sb.from('project_members').select('project_id,user_id,role').eq('role', 'lead').then(function(mres) {
-        var leadRows = mres.data || [];
+      var membersP = sb.from('project_members').select('project_id,user_id,role').eq('role', 'lead');
+      var tradesP = sb.from('project_trades').select('project_id,trade');
+      var tradePhasesP = sb.from('project_trade_phases').select('project_id,trade,phase');
+      Promise.all([membersP, tradesP, tradePhasesP]).then(function(results) {
+        var leadRows = results[0].data || [];
+        var tradeRows = results[1].data || [];
+        var tradePhaseRows = results[2].data || [];
         var leadIds = leadRows.map(function(r) { return r.user_id; });
         var profilesP = leadIds.length ? sb.from('profiles').select('user_id,display_name,email').in('user_id', leadIds) : Promise.resolve({data: []});
         profilesP.then(function(prof) {
@@ -4253,17 +4365,77 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
           }
           listEl.innerHTML = projects.map(function(proj) {
             var leads = leadRows.filter(function(r) { return r.project_id === proj.id; }).map(function(r) { return nameFor(r.user_id); });
+            var thisProjTrades = tradeRows.filter(function(r) { return r.project_id === proj.id; }).map(function(r) { return r.trade; });
+            var enabledTrades = thisProjTrades.length ? thisProjTrades : null;
+            var phasesByTrade = {};
+            TRADE_LIST.forEach(function(t) {
+              var rows = tradePhaseRows.filter(function(r) { return r.project_id === proj.id && r.trade === t.key; }).map(function(r) { return r.phase; });
+              phasesByTrade[t.key] = rows.length ? rows : null;
+            });
             return '<div class="adminprojectrow" data-project="' + esc(proj.id) + '">' +
               '<div><strong>' + esc(proj.name) + '</strong><br><span class="dashempty">Trưởng dự án hiện tại: ' + (leads.length ? esc(leads.join(', ')) : 'chưa có') + '</span></div>' +
               '<div class="adminassignrow">' +
                 '<input type="email" class="adminleademail" data-project="' + esc(proj.id) + '" placeholder="email người sẽ làm Trưởng dự án" />' +
                 '<button type="button" class="toolbtn" data-setlead="' + esc(proj.id) + '">Đặt làm Trưởng dự án</button>' +
+              '</div>' +
+              '<div class="adminscopetoggle"><button type="button" class="toolbtn" data-scopetoggle="' + esc(proj.id) + '">⚙️ Ngành &amp; Phase của dự án</button></div>' +
+              '<div class="adminscopepanel" data-scopepanel="' + esc(proj.id) + '" style="display:none;">' +
+                '<p class="dashempty">Bỏ chọn 1 ngành = ngành đó ẩn hoàn toàn khỏi dự án này (mọi người, kể cả Admin). Với mỗi ngành còn chọn, bỏ chọn (các) Phase không dùng = Phase đó ẩn khỏi ngành này trong dự án. Phải giữ lại ít nhất 1 ngành và, với mỗi ngành, ít nhất 1 Phase.</p>' +
+                '<div class="scopetrades" data-scopetrades="' + esc(proj.id) + '">' + scopeCheckboxesHtml(proj.id, enabledTrades, phasesByTrade) + '</div>' +
+                '<button type="button" class="toolbtn" data-savescope="' + esc(proj.id) + '">💾 Lưu ngành &amp; Phase</button>' +
               '</div></div>';
           }).join('');
         });
       });
     });
   }
+  document.getElementById('adminProjectsList').addEventListener('click', function(e) {
+    var toggleBtn = e.target.closest('[data-scopetoggle]');
+    if (toggleBtn) {
+      var panel = document.querySelector('.adminscopepanel[data-scopepanel="' + toggleBtn.getAttribute('data-scopetoggle') + '"]');
+      if (panel) panel.style.display = panel.style.display === 'none' ? '' : 'none';
+      return;
+    }
+    var saveBtn = e.target.closest('[data-savescope]');
+    if (saveBtn) {
+      var projectId = saveBtn.getAttribute('data-savescope');
+      var scopeRoot = document.querySelector('.scopetrades[data-scopetrades="' + projectId + '"]');
+      if (!scopeRoot) return;
+      var checkedTrades = Array.prototype.slice.call(scopeRoot.querySelectorAll('input.scopetrade:checked')).map(function(cb) { return cb.getAttribute('data-trade'); });
+      if (!checkedTrades.length) { alert('Phải giữ lại ít nhất 1 ngành cho dự án.'); return; }
+      var perTradePhases = {};
+      var incomplete = false;
+      TRADE_LIST.forEach(function(t) {
+        var boxes = Array.prototype.slice.call(scopeRoot.querySelectorAll('input.scopephase[data-trade="' + t.key + '"]'));
+        var checked = boxes.filter(function(cb) { return cb.checked; }).map(function(cb) { return cb.getAttribute('data-phase'); });
+        if (checkedTrades.indexOf(t.key) !== -1 && !checked.length) incomplete = true;
+        perTradePhases[t.key] = checked;
+      });
+      if (incomplete) { alert('Mỗi ngành đã chọn phải giữ lại ít nhất 1 Phase.'); return; }
+      saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu...';
+      sb.rpc('set_project_trades', {p_project_id: projectId, p_trades: checkedTrades}).then(function(res) {
+        if (res.error) throw new Error(res.error.message);
+        return Promise.all(TRADE_LIST.map(function(t) {
+          return sb.rpc('set_project_trade_phases', {p_project_id: projectId, p_trade: t.key, p_phases: perTradePhases[t.key]});
+        }));
+      }).then(function(results) {
+        var errs = results.filter(function(r) { return r && r.error; });
+        if (errs.length) { alert('Lỗi khi lưu Phase: ' + errs[0].error.message); }
+        renderAdminPanel();
+      }).catch(function(err) {
+        alert('Lỗi: ' + err.message);
+        saveBtn.disabled = false; saveBtn.textContent = '💾 Lưu ngành & Phase';
+      });
+      return;
+    }
+  });
+  document.getElementById('adminProjectsList').addEventListener('change', function(e) {
+    var scopeTradeCb = e.target.closest('input.scopetrade');
+    if (!scopeTradeCb) return;
+    var row = scopeTradeCb.closest('.scopetraderow');
+    var phasesBox = row ? row.querySelector('.scopephases') : null;
+    if (phasesBox) phasesBox.style.display = scopeTradeCb.checked ? '' : 'none';
+  });
   document.getElementById('adminProjectsList').addEventListener('click', function(e) {
     var btn = e.target.closest('[data-setlead]');
     if (!btn) return;
