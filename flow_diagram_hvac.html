@@ -4149,7 +4149,7 @@ DUCT TICKET → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → 
     pendingEl.innerHTML = '<p class="dashempty">Đang tải...</p>';
     tradesEl.innerHTML = '<p class="dashempty">Đang tải...</p>';
     if (!sb || !CURRENT_PROJECT) return;
-    sb.from('project_members').select('user_id,role,status').eq('project_id', CURRENT_PROJECT.id).then(function(res) {
+    sb.rpc('list_manageable_members', {p_project_id: CURRENT_PROJECT.id}).then(function(res) {
       var rows = res.data || [];
       var pendingRows = rows.filter(function(r) { return r.status === 'pending'; });
       var approvedStaffRows = rows.filter(function(r) { return r.status === 'approved' && r.role === 'staff'; });
