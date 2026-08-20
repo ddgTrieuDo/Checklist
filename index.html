@@ -55,6 +55,16 @@
   .legend{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:4px;}
   .legend .item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);}
   .swatch{width:14px;height:14px;border-radius:4px;flex:none;}
+  /* Wrap-safe variant for list items with LONG descriptive text (ROLES,
+     PHÂN QUYỀN) — mixing raw text + <b> tags directly inside a centered flex
+     row breaks badly once the text wraps to multiple lines (the browser can
+     visually detach a bold phrase from the paragraph it belongs to). Stacking
+     one item per line, aligning to the top, and wrapping each item's text in
+     its own <span class="itemtext"> avoids that. */
+  .legend-prose{flex-direction:column;gap:12px;}
+  .legend-prose .item{align-items:flex-start;gap:10px;line-height:1.6;}
+  .legend-prose .item .swatch{margin-top:4px;}
+  .legend-prose .item .itemtext{flex:1 1 auto;min-width:0;}
   footer{text-align:center;color:var(--sub);font-size:12px;margin-top:20px;}
   .tradepicker{
     display:grid;
@@ -152,9 +162,9 @@
 
   <div class="card">
     <h2><span class="tag">ROLES</span> Ai làm gì trong quy trình</h2>
-    <div class="legend">
-      <div class="item"><span class="swatch" style="background:#2c6ea6"></span><b>Detailer</b> — trực tiếp dựng model, vẽ, kiểm tra kỹ thuật, xử lý comment/RFI về mặt nội dung</div>
-      <div class="item"><span class="swatch" style="background:#7c4fd6"></span><b>Checker / Lead</b> — duyệt Giai đoạn (PASS/FAIL), issue bản vẽ chính thức (IFR/IFA/IFC), làm việc với khách hàng, quản lý Pending/Hold Register</div>
+    <div class="legend legend-prose">
+      <div class="item"><span class="swatch" style="background:#2c6ea6"></span><span class="itemtext"><b>Detailer</b> — trực tiếp dựng model, vẽ, kiểm tra kỹ thuật, xử lý comment/RFI về mặt nội dung</span></div>
+      <div class="item"><span class="swatch" style="background:#7c4fd6"></span><span class="itemtext"><b>Checker / Lead</b> — duyệt Giai đoạn (PASS/FAIL), issue bản vẽ chính thức (IFR/IFA/IFC), làm việc với khách hàng, quản lý Pending/Hold Register</span></div>
     </div>
     <p style="font-size:12px;color:var(--sub);margin:10px 0 0;">Lưu ý: checklist gốc chỉ ghi rõ vai trò ở một số mục (vd. "Lead/Checker", "by Detailer", "Detailer Self-Check", "Checker QC"). Các mục còn lại được gán vai trò theo thực tế vận hành thông thường của quy trình BIM/MEP Detailing (Detailer triển khai kỹ thuật, Checker/Lead duyệt & kiểm soát giai đoạn) — bạn nên đối chiếu lại với cách phân công thực tế của team mình. Đây chỉ là vai trò mô tả quy trình làm việc — khác với <b>quyền thao tác trong ứng dụng</b> ở mục ngay bên dưới.</p>
   </div>
@@ -164,10 +174,10 @@
     <p style="font-size:13px;color:var(--sub);margin:0 0 8px;">
       Ứng dụng có 3 cấp quyền độc lập với vai trò BIM/MEP ở trên — quyền này quyết định ai được giao việc, duyệt thành viên, tạo dự án mới:
     </p>
-    <div class="legend">
-      <div class="item"><span class="swatch" style="background:#c9922e"></span><b>👑 Admin</b> — cấp cao nhất. Là người duy nhất tạo được dự án mới, và chỉ Admin mới chỉ định ai làm Trưởng dự án cho từng dự án (qua nút <b>"👑 Admin"</b> trên thanh công cụ, chỉ Admin mới thấy nút này). Admin cũng là người chọn (các) Ngành và (các) Phase mà một dự án thực sự dùng.</div>
-      <div class="item"><span class="swatch" style="background:#7c4fd6"></span><b>Trưởng dự án</b> — do Admin chỉ định riêng cho từng dự án. Được quyền giao việc cho nhân viên (ô "Giao cho" + nút "👤+"), duyệt/từ chối nhân viên mới xin vào dự án, và chỉ định nhân viên được sửa (các) ngành nào — tất cả qua nút <b>"✅ Duyệt thành viên"</b> trên thanh công cụ (chỉ Trưởng dự án/Admin mới thấy nút này). Trưởng dự án luôn sửa được TẤT CẢ các ngành trong dự án của mình, không bị giới hạn theo ngành.</div>
-      <div class="item"><span class="swatch" style="background:#2c6ea6"></span><b>Nhân viên</b> — mặc định khi tham gia dự án. Chỉ tích/chọn được các mục mình được giao (hoặc mục dùng chung, không giao riêng ai) — không giao việc được cho người khác, ô "Giao cho" và nút "👤+" sẽ bị khoá/ẩn.</div>
+    <div class="legend legend-prose">
+      <div class="item"><span class="swatch" style="background:#c9922e"></span><span class="itemtext"><b>👑 Admin</b> — cấp cao nhất. Là người duy nhất tạo được dự án mới, và chỉ Admin mới chỉ định ai làm Trưởng dự án cho từng dự án (qua nút <b>"👑 Admin"</b> trên thanh công cụ, chỉ Admin mới thấy nút này). Admin cũng là người chọn (các) Ngành và (các) Phase mà một dự án thực sự dùng.</span></div>
+      <div class="item"><span class="swatch" style="background:#7c4fd6"></span><span class="itemtext"><b>Trưởng dự án</b> — do Admin chỉ định riêng cho từng dự án. Được quyền giao việc cho nhân viên (ô "Giao cho" + nút "👤+"), duyệt/từ chối nhân viên mới xin vào dự án, và chỉ định nhân viên được sửa (các) ngành nào — tất cả qua nút <b>"✅ Duyệt thành viên"</b> trên thanh công cụ (chỉ Trưởng dự án/Admin mới thấy nút này). Trưởng dự án luôn sửa được TẤT CẢ các ngành trong dự án của mình, không bị giới hạn theo ngành.</span></div>
+      <div class="item"><span class="swatch" style="background:#2c6ea6"></span><span class="itemtext"><b>Nhân viên</b> — mặc định khi tham gia dự án. Chỉ tích/chọn được các mục mình được giao (hoặc mục dùng chung, không giao riêng ai) — không giao việc được cho người khác, ô "Giao cho" và nút "👤+" sẽ bị khoá/ẩn.</span></div>
     </div>
     <p style="font-size:12px;color:var(--sub);margin:10px 0 0;">
       Nhân viên tham gia một dự án ĐÃ có người khác đang dùng (nhập đúng Tên dự án + Mã truy cập) sẽ ở trạng thái <b>"Đang chờ duyệt"</b> — chưa xem/thao tác được checklist cho tới khi Trưởng dự án hoặc Admin bấm duyệt. Đây là để tránh người lạ biết mã truy cập tự ý vào xem dữ liệu dự án.
