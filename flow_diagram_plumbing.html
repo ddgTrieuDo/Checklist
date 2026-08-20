@@ -425,6 +425,11 @@
   .dash-pending{font-size:10px;color:#8a5a12;margin-top:2px;}
   .pendingrow{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:8px 10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;}
   .pendingrow-actions{display:flex;gap:6px;flex:none;}
+  /* Forces onto its own line above the name/checkboxes/actions row (parent
+     is flex-wrap:wrap) — shows which project a join-request/staff row
+     belongs to. Mainly matters for the Admin view, which lists requests
+     across EVERY project at once (not just the currently-selected one). */
+  .pendingrow-project{flex:1 0 100%;font-size:11px;font-weight:700;color:var(--accent);}
   .tradecheckboxes{display:flex;flex-wrap:wrap;gap:4px 10px;flex:1 1 auto;min-width:220px;}
   .tradecheckbox{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--sub);white-space:nowrap;}
   .adminprojectrow{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;}
@@ -544,7 +549,7 @@
       ✅ Duyệt thành viên
       <button type="button" class="toolbtn" id="btnCloseLead" style="padding:4px 10px;">✕ Close</button>
     </h2>
-    <p style="font-size:12.5px;color:var(--sub);">Những người đang chờ vào dự án "<span id="leadProjectName"></span>". Chỉ Trưởng dự án / Admin thấy được mục này. Với mỗi người, tick sẵn (các) ngành họ được sửa trước khi bấm Duyệt — <b>không tick ngành nào = không giới hạn, sửa được mọi ngành</b> (giống mặc định trước đây).</p>
+    <p style="font-size:12.5px;color:var(--sub);" id="leadPanelIntro"></p>
     <div id="leadPendingList"></div>
     <h2 style="margin-top:22px;">🔧 Quản lý ngành của Nhân viên</h2>
     <p style="font-size:12.5px;color:var(--sub);">Chỉnh lại (các) ngành mà từng Nhân viên đã duyệt được phép sửa — đổi ngay lập tức, không cần họ vào lại. Bỏ tick hết = không giới hạn.</p>
@@ -4137,11 +4142,20 @@
     document.getElementById('dashboardOverlay').style.display = 'none';
   });
 
-  // ---- Lead approvals: staff who requested to join the CURRENT project and
-  // are still pending, PLUS per-trade edit access management for everyone
-  // already approved. Visible to the project's Lead(s) and to Admins. ----
-  function tradeCheckboxesHtml(uid, grantedSet) {
-    return '<span class="tradecheckboxes">' + TRADE_LIST.map(function(t) {
+  // ---- Lead approvals: join requests + per-trade edit access management.
+  // Admin sees PENDING requests across EVERY project at once (not just the
+  // currently-selected one) since Admin can approve anyone anywhere. A Lead
+  // (non-Admin) only ever sees requests for the CURRENT project — and only
+  // if they're the approved Lead there (enforced server-side too, inside
+  // list_manageable_members/list_all_pending_join_requests). The per-trade
+  // "Quản lý ngành của Nhân viên" management section always stays scoped to
+  // the CURRENT project (editing trade access is inherently per-project).
+  // Trade checkboxes shown for either section are filtered down to only the
+  // trades actually enabled for that specific project (project_trades —
+  // empty = all trades enabled, same safe default used elsewhere). ----
+  function tradeCheckboxesHtml(uid, grantedSet, allowedTrades) {
+    var list = allowedTrades ? TRADE_LIST.filter(function(t) { return allowedTrades.indexOf(t.key) !== -1; }) : TRADE_LIST;
+    return '<span class="tradecheckboxes">' + list.map(function(t) {
       return '<label class="tradecheckbox"><input type="checkbox" data-trade-user="' + esc(uid) + '" data-trade="' + esc(t.key) + '"' +
         (grantedSet.has(t.key) ? ' checked' : '') + '> ' + esc(t.label) + '</label>';
     }).join('') + '</span>';
@@ -4151,73 +4165,148 @@
       return cb.getAttribute('data-trade');
     });
   }
+  function leadNameForBuilder(profiles) {
+    return function(uid) {
+      var p = profiles.filter(function(x) { return x.user_id === uid; })[0];
+      return p ? (esc(p.display_name || p.email || uid) + (p.email ? (' <span class="dashempty">(' + esc(p.email) + ')</span>') : '')) : esc(uid);
+    };
+  }
+  function renderAdminPendingList(pendingEl) {
+    sb.rpc('list_all_pending_join_requests', {}).then(function(res) {
+      if (res.error) {
+        pendingEl.innerHTML = '<p class="dashempty">⚠️ Lỗi tải danh sách: ' + esc(res.error.message) + '</p>';
+        return;
+      }
+      var rows = res.data || [];
+      if (!rows.length) {
+        pendingEl.innerHTML = '<p class="dashempty">Không có đơn nào đang chờ duyệt ở bất kỳ dự án nào.</p>';
+        return;
+      }
+      var projectIds = rows.map(function(r) { return r.project_id; }).filter(function(v, i, a) { return a.indexOf(v) === i; });
+      var userIds = rows.map(function(r) { return r.user_id; });
+      Promise.all([
+        sb.from('profiles').select('user_id,display_name,email').in('user_id', userIds),
+        sb.from('project_trades').select('project_id,trade').in('project_id', projectIds)
+      ]).then(function(results) {
+        var profiles = results[0].data || [];
+        var tradeRows = results[1].data || [];
+        var nameFor = leadNameForBuilder(profiles);
+        var allowedByProject = {};
+        projectIds.forEach(function(pid) {
+          var trades = tradeRows.filter(function(t) { return t.project_id === pid; }).map(function(t) { return t.trade; });
+          allowedByProject[pid] = trades.length ? trades : null;
+        });
+        pendingEl.innerHTML = rows.map(function(r) {
+          var uid = r.user_id, pid = r.project_id;
+          return '<div class="pendingrow" data-user="' + esc(uid) + '" data-project="' + esc(pid) + '">' +
+            '<div class="pendingrow-project">📁 Xin vào dự án: ' + esc(r.project_name) + '</div>' +
+            '<span>' + nameFor(uid) + '</span>' +
+            tradeCheckboxesHtml(uid, new Set(), allowedByProject[pid]) +
+            '<span class="pendingrow-actions">' +
+              '<button type="button" class="toolbtn" data-approve="' + esc(uid) + '" data-project="' + esc(pid) + '">✓ Duyệt</button>' +
+              '<button type="button" class="toolbtn danger" data-reject="' + esc(uid) + '" data-project="' + esc(pid) + '">✕ Từ chối</button>' +
+            '</span></div>';
+        }).join('');
+      });
+    });
+  }
+  function renderProjectPendingList(pendingEl) {
+    if (!CURRENT_PROJECT) { pendingEl.innerHTML = ''; return; }
+    Promise.all([
+      sb.rpc('list_manageable_members', {p_project_id: CURRENT_PROJECT.id}),
+      sb.from('project_trades').select('trade').eq('project_id', CURRENT_PROJECT.id)
+    ]).then(function(results) {
+      var res = results[0];
+      if (res.error) {
+        pendingEl.innerHTML = '<p class="dashempty">⚠️ Lỗi tải danh sách: ' + esc(res.error.message) + '</p>';
+        return;
+      }
+      var rows = (res.data || []).filter(function(r) { return r.status === 'pending'; });
+      var scopeRows = results[1].data || [];
+      var allowedTrades = scopeRows.length ? scopeRows.map(function(t) { return t.trade; }) : null;
+      if (!rows.length) {
+        pendingEl.innerHTML = '<p class="dashempty">Không có ai đang chờ duyệt.</p>';
+        return;
+      }
+      var uids = rows.map(function(r) { return r.user_id; });
+      sb.from('profiles').select('user_id,display_name,email').in('user_id', uids).then(function(pres) {
+        var nameFor = leadNameForBuilder(pres.data || []);
+        pendingEl.innerHTML = rows.map(function(r) {
+          var uid = r.user_id;
+          return '<div class="pendingrow" data-user="' + esc(uid) + '" data-project="' + esc(CURRENT_PROJECT.id) + '">' +
+            '<div class="pendingrow-project">📁 Xin vào dự án: ' + esc(CURRENT_PROJECT.name) + '</div>' +
+            '<span>' + nameFor(uid) + '</span>' +
+            tradeCheckboxesHtml(uid, new Set(), allowedTrades) +
+            '<span class="pendingrow-actions">' +
+              '<button type="button" class="toolbtn" data-approve="' + esc(uid) + '" data-project="' + esc(CURRENT_PROJECT.id) + '">✓ Duyệt</button>' +
+              '<button type="button" class="toolbtn danger" data-reject="' + esc(uid) + '" data-project="' + esc(CURRENT_PROJECT.id) + '">✕ Từ chối</button>' +
+            '</span></div>';
+        }).join('');
+      });
+    });
+  }
+  function renderApprovedTradesList(tradesEl) {
+    if (!CURRENT_PROJECT) { tradesEl.innerHTML = ''; return; }
+    Promise.all([
+      sb.rpc('list_manageable_members', {p_project_id: CURRENT_PROJECT.id}),
+      sb.from('project_member_trades').select('user_id,trade').eq('project_id', CURRENT_PROJECT.id),
+      sb.from('project_trades').select('trade').eq('project_id', CURRENT_PROJECT.id)
+    ]).then(function(results) {
+      var res = results[0];
+      if (res.error) {
+        tradesEl.innerHTML = '<p class="dashempty">⚠️ Lỗi tải danh sách: ' + esc(res.error.message) + '</p>';
+        return;
+      }
+      var rows = (res.data || []).filter(function(r) { return r.status === 'approved' && r.role === 'staff'; });
+      var tradeRows = results[1].data || [];
+      var scopeRows = results[2].data || [];
+      var allowedTrades = scopeRows.length ? scopeRows.map(function(t) { return t.trade; }) : null;
+      if (!rows.length) {
+        tradesEl.innerHTML = '<p class="dashempty">Chưa có Nhân viên nào đã duyệt.</p>';
+        return;
+      }
+      var uids = rows.map(function(r) { return r.user_id; });
+      sb.from('profiles').select('user_id,display_name,email').in('user_id', uids).then(function(pres) {
+        var nameFor = leadNameForBuilder(pres.data || []);
+        function grantedSetFor(uid) {
+          return new Set(tradeRows.filter(function(t) { return t.user_id === uid; }).map(function(t) { return t.trade; }));
+        }
+        tradesEl.innerHTML = rows.map(function(r) {
+          var uid = r.user_id;
+          return '<div class="pendingrow" data-user="' + esc(uid) + '">' +
+            '<span>' + nameFor(uid) + '</span>' +
+            tradeCheckboxesHtml(uid, grantedSetFor(uid), allowedTrades) +
+            '</div>';
+        }).join('') ;
+      });
+    });
+  }
   function renderLeadApprovals() {
-    document.getElementById('leadProjectName').textContent = CURRENT_PROJECT ? CURRENT_PROJECT.name : '';
+    var introEl = document.getElementById('leadPanelIntro');
     var pendingEl = document.getElementById('leadPendingList');
     var tradesEl = document.getElementById('leadTradesList');
     pendingEl.innerHTML = '<p class="dashempty">Đang tải...</p>';
     tradesEl.innerHTML = '<p class="dashempty">Đang tải...</p>';
-    if (!sb || !CURRENT_PROJECT) return;
-    sb.rpc('list_manageable_members', {p_project_id: CURRENT_PROJECT.id}).then(function(res) {
-      // IMPORTANT: surface RPC errors instead of silently falling through to
-      // the empty-list rows/allIds.length checks below — an error here used
-      // to render as "Không có ai đang chờ duyệt" / "Chưa có Nhân viên nào",
-      // which is indistinguishable from a genuinely empty project and hides
-      // real problems (e.g. a pending SQL migration, a permissions issue).
-      if (res.error) {
-        pendingEl.innerHTML = '<p class="dashempty">⚠️ Lỗi tải danh sách: ' + esc(res.error.message) + '</p>';
-        tradesEl.innerHTML = '<p class="dashempty">⚠️ Lỗi tải danh sách: ' + esc(res.error.message) + '</p>';
-        return;
-      }
-      var rows = res.data || [];
-      var pendingRows = rows.filter(function(r) { return r.status === 'pending'; });
-      var approvedStaffRows = rows.filter(function(r) { return r.status === 'approved' && r.role === 'staff'; });
-      var allIds = rows.map(function(r) { return r.user_id; });
-      if (!allIds.length) {
-        pendingEl.innerHTML = '<p class="dashempty">Không có ai đang chờ duyệt.</p>';
-        tradesEl.innerHTML = '<p class="dashempty">Chưa có Nhân viên nào.</p>';
-        return;
-      }
-      var profilesP = sb.from('profiles').select('user_id,display_name,email').in('user_id', allIds);
-      var tradesP = sb.from('project_member_trades').select('user_id,trade').eq('project_id', CURRENT_PROJECT.id);
-      Promise.all([profilesP, tradesP]).then(function(results) {
-        var profiles = results[0].data || [];
-        var tradeRows = results[1].data || [];
-        function nameFor(uid) {
-          var p = profiles.filter(function(x) { return x.user_id === uid; })[0];
-          return p ? (esc(p.display_name || p.email || uid) + (p.email ? (' <span class="dashempty">(' + esc(p.email) + ')</span>') : '')) : esc(uid);
-        }
-        function grantedSetFor(uid) {
-          return new Set(tradeRows.filter(function(t) { return t.user_id === uid; }).map(function(t) { return t.trade; }));
-        }
-        pendingEl.innerHTML = pendingRows.length ? pendingRows.map(function(r) {
-          var uid = r.user_id;
-          return '<div class="pendingrow" data-user="' + esc(uid) + '">' +
-            '<span>' + nameFor(uid) + '</span>' +
-            tradeCheckboxesHtml(uid, new Set()) +
-            '<span class="pendingrow-actions">' +
-              '<button type="button" class="toolbtn" data-approve="' + esc(uid) + '">✓ Duyệt</button>' +
-              '<button type="button" class="toolbtn danger" data-reject="' + esc(uid) + '">✕ Từ chối</button>' +
-            '</span></div>';
-        }).join('') : '<p class="dashempty">Không có ai đang chờ duyệt.</p>';
-        tradesEl.innerHTML = approvedStaffRows.length ? approvedStaffRows.map(function(r) {
-          var uid = r.user_id;
-          return '<div class="pendingrow" data-user="' + esc(uid) + '">' +
-            '<span>' + nameFor(uid) + '</span>' +
-            tradeCheckboxesHtml(uid, grantedSetFor(uid)) +
-            '</div>';
-        }).join('') : '<p class="dashempty">Chưa có Nhân viên nào đã duyệt.</p>';
-      });
-    });
+    if (!sb) return;
+    if (IS_ADMIN) {
+      introEl.innerHTML = 'Toàn bộ đơn xin vào <b>MỌI dự án</b> — Admin thấy hết, không chỉ riêng dự án đang chọn ở trên. Với mỗi người, tick sẵn (các) ngành họ được sửa trước khi bấm Duyệt — <b>không tick ngành nào = không giới hạn, sửa được mọi ngành</b> (giống mặc định trước đây).';
+      renderAdminPendingList(pendingEl);
+    } else {
+      introEl.innerHTML = 'Những người đang chờ vào dự án "' + esc(CURRENT_PROJECT ? CURRENT_PROJECT.name : '') + '" — chỉ Trưởng dự án của đúng dự án này mới thấy và duyệt được. Với mỗi người, tick sẵn (các) ngành họ được sửa trước khi bấm Duyệt — <b>không tick ngành nào = không giới hạn, sửa được mọi ngành</b> (giống mặc định trước đây).';
+      renderProjectPendingList(pendingEl);
+    }
+    renderApprovedTradesList(tradesEl);
   }
   document.getElementById('leadPendingList').addEventListener('click', function(e) {
     var approveBtn = e.target.closest('[data-approve]');
     var rejectBtn = e.target.closest('[data-reject]');
     if (!approveBtn && !rejectBtn) return;
-    if (!CURRENT_PROJECT) return;
-    var uid = (approveBtn || rejectBtn).getAttribute(approveBtn ? 'data-approve' : 'data-reject');
+    var btn = approveBtn || rejectBtn;
+    var uid = btn.getAttribute(approveBtn ? 'data-approve' : 'data-reject');
+    var pid = btn.getAttribute('data-project') || (CURRENT_PROJECT && CURRENT_PROJECT.id);
+    if (!pid) return;
     if (rejectBtn) {
-      sb.rpc('reject_member', {p_project_id: CURRENT_PROJECT.id, p_user_id: uid}).then(function(res) {
+      sb.rpc('reject_member', {p_project_id: pid, p_user_id: uid}).then(function(res) {
         if (res.error) { alert('Lỗi: ' + res.error.message); return; }
         renderLeadApprovals();
       });
@@ -4225,9 +4314,9 @@
     }
     var row = approveBtn.closest('.pendingrow');
     var trades = row ? readCheckedTrades(uid, row) : [];
-    sb.rpc('approve_member', {p_project_id: CURRENT_PROJECT.id, p_user_id: uid}).then(function(res) {
+    sb.rpc('approve_member', {p_project_id: pid, p_user_id: uid}).then(function(res) {
       if (res.error) { alert('Lỗi: ' + res.error.message); return; }
-      return sb.rpc('set_member_trades', {p_project_id: CURRENT_PROJECT.id, p_user_id: uid, p_trades: trades});
+      return sb.rpc('set_member_trades', {p_project_id: pid, p_user_id: uid, p_trades: trades});
     }).then(function(res2) {
       if (res2 && res2.error) { alert('Đã duyệt nhưng lỗi khi lưu ngành: ' + res2.error.message); }
       renderLeadApprovals();
