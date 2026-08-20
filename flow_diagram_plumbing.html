@@ -551,8 +551,8 @@
     </h2>
     <p style="font-size:12.5px;color:var(--sub);" id="leadPanelIntro"></p>
     <div id="leadPendingList"></div>
-    <h2 style="margin-top:22px;">🔧 Quản lý ngành của Nhân viên</h2>
-    <p style="font-size:12.5px;color:var(--sub);">Chỉnh lại (các) ngành mà từng Nhân viên đã duyệt được phép sửa — đổi ngay lập tức, không cần họ vào lại. Bỏ tick hết = không giới hạn.</p>
+    <h2 style="margin-top:22px;">🔧 Thành viên dự án &amp; Quản lý ngành</h2>
+    <p style="font-size:12.5px;color:var(--sub);">Toàn bộ thành viên đã được duyệt của dự án này. Với Nhân viên, chỉnh lại (các) ngành họ được phép sửa — đổi ngay lập tức, không cần họ vào lại (bỏ tick hết = không giới hạn). Trưởng dự án và Admin luôn được sửa mọi ngành nên không có checkbox để giới hạn.</p>
     <div id="leadTradesList"></div>
   </div>
 </div>
@@ -4247,8 +4247,13 @@
   }
   function renderApprovedTradesList(tradesEl) {
     if (!CURRENT_PROJECT) { tradesEl.innerHTML = ''; return; }
+    // Uses list_project_members_with_admin_flag (NOT list_manageable_members
+    // — that one intentionally hides Admins) so this "who's on the project"
+    // view shows EVERY approved member (Staff + Lead + Admin) in one place.
+    // Lead/Admin rows render as a plain "không giới hạn" label instead of
+    // trade checkboxes, since those two roles can always edit every trade.
     Promise.all([
-      sb.rpc('list_manageable_members', {p_project_id: CURRENT_PROJECT.id}),
+      sb.rpc('list_project_members_with_admin_flag', {p_project_id: CURRENT_PROJECT.id}),
       sb.from('project_member_trades').select('user_id,trade').eq('project_id', CURRENT_PROJECT.id),
       sb.from('project_trades').select('trade').eq('project_id', CURRENT_PROJECT.id)
     ]).then(function(results) {
@@ -4257,12 +4262,12 @@
         tradesEl.innerHTML = '<p class="dashempty">⚠️ Lỗi tải danh sách: ' + esc(res.error.message) + '</p>';
         return;
       }
-      var rows = (res.data || []).filter(function(r) { return r.status === 'approved' && r.role === 'staff'; });
+      var rows = res.data || [];
       var tradeRows = results[1].data || [];
       var scopeRows = results[2].data || [];
       var allowedTrades = scopeRows.length ? scopeRows.map(function(t) { return t.trade; }) : null;
       if (!rows.length) {
-        tradesEl.innerHTML = '<p class="dashempty">Chưa có Nhân viên nào đã duyệt.</p>';
+        tradesEl.innerHTML = '<p class="dashempty">Chưa có thành viên nào đã duyệt.</p>';
         return;
       }
       var uids = rows.map(function(r) { return r.user_id; });
@@ -4273,11 +4278,15 @@
         }
         tradesEl.innerHTML = rows.map(function(r) {
           var uid = r.user_id;
+          var unrestricted = r.is_admin || r.role === 'lead';
+          var controls = unrestricted
+            ? ('<span class="dash-pending">' + (r.is_admin ? '👑 Admin' : '🔑 Trưởng dự án') + ' — luôn sửa được mọi ngành</span>')
+            : tradeCheckboxesHtml(uid, grantedSetFor(uid), allowedTrades);
           return '<div class="pendingrow" data-user="' + esc(uid) + '">' +
             '<span>' + nameFor(uid) + '</span>' +
-            tradeCheckboxesHtml(uid, grantedSetFor(uid), allowedTrades) +
+            controls +
             '</div>';
-        }).join('') ;
+        }).join('');
       });
     });
   }
