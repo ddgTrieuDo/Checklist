@@ -264,11 +264,16 @@
   .chkrow span{flex:1;}
   .chkrow input:checked ~ span{color:var(--green);text-decoration:line-through;text-decoration-color:#9fcbad;}
   /* Checked by exactly one person: same checked state (still counts toward
-     %), just visually muted until a second, different teammate also
-     confirms it — then it brightens and lists that second confirmation. */
+     %), with a distinct muted gold color (vs. green) as a hint that a
+     second, different teammate hasn't confirmed it yet — then it turns
+     green and lists that second confirmation. NOTE: the "✓ name · time"
+     line and the "+ Check 2" button underneath must stay at FULL opacity
+     here (not dimmed) — they're fully clickable in this state, and a low
+     opacity made the "+ Check 2" button look disabled/greyed-out even
+     though it works fine. Only the checkbox tick + its label text use a
+     muted color to signal "pending 2nd check", never opacity/transparency. */
   .chkitem.singleconfirm .chkrow input:checked{accent-color:#c9b98a;}
   .chkitem.singleconfirm .chkrow input:checked ~ span{color:#9a8f6e;text-decoration-color:#e0d6b0;}
-  .chkitem.singleconfirm .answeredby{opacity:.6;}
   .extraconfirm{margin:1px 0 4px 22px;}
   .extraconfirm .answeredby{margin:1px 0 0 0;}
   .iteminlinenote{display:block;font-size:11px;font-style:italic;color:var(--sub);margin-top:2px;}
@@ -4207,6 +4212,16 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
     tradesEl.innerHTML = '<p class="dashempty">Đang tải...</p>';
     if (!sb || !CURRENT_PROJECT) return;
     sb.rpc('list_manageable_members', {p_project_id: CURRENT_PROJECT.id}).then(function(res) {
+      // IMPORTANT: surface RPC errors instead of silently falling through to
+      // the empty-list rows/allIds.length checks below — an error here used
+      // to render as "Không có ai đang chờ duyệt" / "Chưa có Nhân viên nào",
+      // which is indistinguishable from a genuinely empty project and hides
+      // real problems (e.g. a pending SQL migration, a permissions issue).
+      if (res.error) {
+        pendingEl.innerHTML = '<p class="dashempty">⚠️ Lỗi tải danh sách: ' + esc(res.error.message) + '</p>';
+        tradesEl.innerHTML = '<p class="dashempty">⚠️ Lỗi tải danh sách: ' + esc(res.error.message) + '</p>';
+        return;
+      }
       var rows = res.data || [];
       var pendingRows = rows.filter(function(r) { return r.status === 'pending'; });
       var approvedStaffRows = rows.filter(function(r) { return r.status === 'approved' && r.role === 'staff'; });
