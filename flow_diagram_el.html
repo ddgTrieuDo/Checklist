@@ -275,11 +275,18 @@
      read-only line lists each assignee's own status so you can still see
      who has confirmed and who hasn't, without a separate clickable row. */
   .chkrow input:disabled{cursor:not-allowed;opacity:.5;}
-  .assignedstatus-list{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:10.5px;}
+  // One row per assignee (not a wrapping inline tag list) so long names and
+  // Check-2 badges never crowd together; only the first 2 rows show by
+  // default, with a "+N người khác" toggle to reveal the rest on click.
+  .assignedstatus-list{display:flex;flex-direction:column;gap:3px;font-size:10.5px;}
+  .assignedstatus-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
+  .assignedstatus-row-extra{display:none;}
+  .assignedstatus-list.expanded .assignedstatus-row-extra{display:flex;}
   .assignedstatus{white-space:nowrap;}
   .assignedstatus-done{color:var(--green);}
   .assignedstatus-pending{color:var(--sub);opacity:.75;}
-  .assignedstatus-wrap{display:inline-flex;align-items:center;gap:4px;}
+  .assignedstatus-toggle{font-size:10px;color:var(--accent);background:none;border:none;padding:1px 0;cursor:pointer;text-align:left;font-family:inherit;}
+  .assignedstatus-toggle:hover{text-decoration:underline;}
   .assignpopover{
     margin-top:6px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#fbfcfd;
     box-shadow:0 4px 14px rgba(16,24,32,.12);
@@ -3019,6 +3026,19 @@ PREFAB → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMI
     var badge = e.target.closest('.check2badge-clickable');
     if (badge) { clearCheck2(badge.getAttribute('data-check2-item'), badge.getAttribute('data-check2-target')); return; }
   });
+  // "+N người khác" toggle under an assigned item's status list: reveals the
+  // rows past the first 2 (see assignedStatusHtml). Recomputes the hidden
+  // count from the DOM on each click rather than storing it, so it's always
+  // correct even after the list re-renders (e.g. a new confirmation arrives).
+  document.addEventListener('click', function(e) {
+    var toggle = e.target.closest('.assignedstatus-toggle');
+    if (!toggle) return;
+    var list = toggle.closest('.assignedstatus-list');
+    if (!list) return;
+    var expanded = list.classList.toggle('expanded');
+    var hiddenCount = list.querySelectorAll('.assignedstatus-row-extra').length;
+    toggle.textContent = expanded ? 'Thu gọn' : ('+' + hiddenCount + ' người khác');
+  });
 
   // A shared (non-"Giao cho"-assigned) checkbox can carry more than one
   // person's confirmation — the "primary" progress row plus an optional
@@ -3092,9 +3112,12 @@ PREFAB → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMI
   // also enforced server-side via RLS on item_confirmations, so it's a real
   // permission, not just a UI hint). A small read-only line below shows each
   // assignee's own status so the team can still see who's done and who's
-  // pending, without a separate clickable row per person.
+  // pending — one row per person. Only the first 2 rows show by default;
+  // with 3+ assignees a "+N người khác" toggle reveals the rest on click
+  // (see the .assignedstatus-toggle handler below), so a long assignee list
+  // never dominates the item.
   function assignedStatusHtml(itemId, assignees, isDaily, allowCheck2) {
-    return assignees.map(function(a) {
+    var rowsHtml = assignees.map(function(a, idx) {
       var conf = itemConfirmations[itemId + '|' + a.user_id];
       // '1' for a checkbox, or any chosen option value for a status dropdown
       // — either way, "confirmed" just means the stored value isn't empty.
@@ -3107,8 +3130,12 @@ PREFAB → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMI
       // teammate ("Check 2"), same as before the single-checkbox redesign —
       // just attached to their status line instead of a separate row.
       var badge = (confirmed && allowCheck2) ? check2BadgeCore(itemId, a.name) : '';
-      return badge ? ('<span class="assignedstatus-wrap">' + statusSpan + badge + '</span>') : statusSpan;
+      var rowCls = 'assignedstatus-row' + (idx >= 2 ? ' assignedstatus-row-extra' : '');
+      return '<div class="' + rowCls + '">' + statusSpan + badge + '</div>';
     }).join('');
+    var extraCount = assignees.length - 2;
+    var toggle = extraCount > 0 ? '<button type="button" class="assignedstatus-toggle">+' + extraCount + ' người khác</button>' : '';
+    return rowsHtml + toggle;
   }
   function renderCheckboxAssignMode(itemId, el) {
     var host = document.querySelector('.chkitem[data-id="' + itemId + '"]');
@@ -3151,7 +3178,7 @@ PREFAB → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMI
     selectEl.disabled = !isMe;
     // Dropdown/status items never carry Check 2 (same rule as non-assigned
     // dropdown items — Check 2 is only meaningful for a simple yes/no tick).
-    multiDiv.innerHTML = '<div class="scopecell-assignedstatus">' + assignedStatusHtml(itemId, assignees, false, false) + '</div>';
+    multiDiv.innerHTML = '<div class="scopecell-assignedstatus assignedstatus-list">' + assignedStatusHtml(itemId, assignees, false, false) + '</div>';
     multiDiv.style.display = 'block';
   }
   function syncSharedCheckboxFromConfirmations(itemId) {
