@@ -52,6 +52,12 @@
     border-color:var(--accent);
     cursor:default;
   }
+  .tradelockbanner{
+    display:flex;align-items:center;gap:8px;
+    font-size:13px;color:#7a4a12;
+    background:#fdf1dd;border:1px solid #f0d7a8;border-radius:8px;
+    padding:10px 14px;margin:0 0 16px;
+  }
   .navbar{
     position:sticky;top:37px;z-index:10;
     background:rgba(245,247,249,.97);
@@ -404,8 +410,10 @@
   .dashtable tbody tr[data-navto].lagging:hover td{background:#fbe8d4;}
   .dashempty{font-size:12px;color:var(--sub);font-style:italic;}
   .dash-pending{font-size:10px;color:#8a5a12;margin-top:2px;}
-  .pendingrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .pendingrow{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:8px 10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;}
   .pendingrow-actions{display:flex;gap:6px;flex:none;}
+  .tradecheckboxes{display:flex;flex-wrap:wrap;gap:4px 10px;flex:1 1 auto;min-width:220px;}
+  .tradecheckbox{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--sub);white-space:nowrap;}
   .adminprojectrow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;}
   .adminassignrow{display:flex;gap:6px;flex:none;}
   .adminleademail{font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;min-width:200px;}
@@ -515,8 +523,11 @@
       ✅ Duyệt thành viên
       <button type="button" class="toolbtn" id="btnCloseLead" style="padding:4px 10px;">✕ Close</button>
     </h2>
-    <p style="font-size:12.5px;color:var(--sub);">Những người đang chờ vào dự án "<span id="leadProjectName"></span>". Chỉ Trưởng dự án / Admin thấy được mục này.</p>
+    <p style="font-size:12.5px;color:var(--sub);">Những người đang chờ vào dự án "<span id="leadProjectName"></span>". Chỉ Trưởng dự án / Admin thấy được mục này. Với mỗi người, tick sẵn (các) ngành họ được sửa trước khi bấm Duyệt — <b>không tick ngành nào = không giới hạn, sửa được mọi ngành</b> (giống mặc định trước đây).</p>
     <div id="leadPendingList"></div>
+    <h2 style="margin-top:22px;">🔧 Quản lý ngành của Nhân viên</h2>
+    <p style="font-size:12.5px;color:var(--sub);">Chỉnh lại (các) ngành mà từng Nhân viên đã duyệt được phép sửa — đổi ngay lập tức, không cần họ vào lại. Bỏ tick hết = không giới hạn.</p>
+    <div id="leadTradesList"></div>
   </div>
 </div>
 
@@ -571,6 +582,9 @@
   </div>
 </div>
 <div class="wrap">
+  <div class="tradelockbanner" id="tradeLockBanner" style="display:none;">
+    🔒 Bạn chỉ có quyền <b>XEM</b> ngành <b>Mechanical Piping</b> trong dự án này — mọi ô tích/dropdown/nút thao tác trên trang này đã bị khoá. Liên hệ Trưởng dự án hoặc Admin nếu bạn cần được cấp quyền sửa ngành này.
+  </div>
   <header id="top">
     <h1>DETAILED PROCESS FLOW — MASTER CHECKLIST FULL MECHANICAL PIPING DETAILING</h1>
     <p class="subtitle">Bản đầy đủ: sơ đồ tổng quan 9 Giai đoạn (theo quy trình dự án thực tế) + sơ đồ nội bộ (logic thật, có nhánh quyết định, phân vai trò) cho từng Giai đoạn + toàn bộ checklist item gốc, có ô tích / dropdown trạng thái để đánh dấu tiến độ, tự động đồng bộ qua Internet cho cả nhóm.</p>
@@ -625,11 +639,14 @@
     </p>
     <div class="legend">
       <div class="item"><span class="swatch" style="background:#c9922e"></span><b>👑 Admin</b> — cấp cao nhất. Là người duy nhất tạo được dự án mới, và chỉ Admin mới chỉ định ai làm Trưởng dự án cho từng dự án (qua nút <b>"👑 Admin"</b> trên thanh công cụ, chỉ Admin mới thấy nút này).</div>
-      <div class="item"><span class="swatch" style="background:#7c4fd6"></span><b>Trưởng dự án</b> — do Admin chỉ định riêng cho từng dự án. Được quyền giao việc cho nhân viên (ô "Giao cho" + nút "👤+"), và duyệt/từ chối nhân viên mới xin vào dự án qua nút <b>"✅ Duyệt thành viên"</b> trên thanh công cụ (chỉ Trưởng dự án/Admin mới thấy nút này).</div>
+      <div class="item"><span class="swatch" style="background:#7c4fd6"></span><b>Trưởng dự án</b> — do Admin chỉ định riêng cho từng dự án. Được quyền giao việc cho nhân viên (ô "Giao cho" + nút "👤+"), duyệt/từ chối nhân viên mới xin vào dự án, và chỉ định nhân viên được sửa (các) ngành nào — tất cả qua nút <b>"✅ Duyệt thành viên"</b> trên thanh công cụ (chỉ Trưởng dự án/Admin mới thấy nút này). Trưởng dự án luôn sửa được TẤT CẢ các ngành trong dự án của mình, không bị giới hạn theo ngành.</div>
       <div class="item"><span class="swatch" style="background:#2c6ea6"></span><b>Nhân viên</b> — mặc định khi tham gia dự án. Chỉ tích/chọn được các mục mình được giao (hoặc mục dùng chung, không giao riêng ai) — không giao việc được cho người khác, ô "Giao cho" và nút "👤+" sẽ bị khoá/ẩn.</div>
     </div>
     <p style="font-size:12px;color:var(--sub);margin:10px 0 0;">
       Nhân viên tham gia một dự án ĐÃ có người khác đang dùng (nhập đúng Tên dự án + Mã truy cập) sẽ ở trạng thái <b>"Đang chờ duyệt"</b> — chưa xem/thao tác được checklist cho tới khi Trưởng dự án hoặc Admin bấm duyệt. Đây là để tránh người lạ biết mã truy cập tự ý vào xem dữ liệu dự án.
+    </p>
+    <p style="font-size:12px;color:var(--sub);margin:6px 0 0;">
+      <b>Giới hạn theo ngành (Plumbing/HVAC/Mechanical Piping/Fire Protection/Electrical):</b> khi duyệt một Nhân viên (hoặc bất kỳ lúc nào sau đó), Trưởng dự án/Admin có thể tick chọn đúng (các) ngành người đó được sửa. Nếu không tick ngành nào, Nhân viên đó KHÔNG bị giới hạn — sửa được mọi ngành trong dự án như trước đây. Nếu đã tick ít nhất 1 ngành, sang các ngành KHÁC (không nằm trong danh sách được tick) trang sẽ tự khoá toàn bộ ô tích/dropdown lại — chỉ xem, không sửa được — kèm banner cảnh báo ở đầu trang.
     </p>
   </div>
 
@@ -2360,6 +2377,10 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
   // switching trades would overwrite (and lose) another trade's cached
   // local progress for the same project on this device.
   var CACHE_PREFIX = 'mp_project_cache_v1_';
+  // This page's own trade key ('plumbing'/'hvac'/'mp'/'fp'/'el') — used to
+  // decide whether the CURRENT viewer is allowed to edit on THIS page at
+  // all, per the trade-scoped staff permission below (see CAN_EDIT_THIS_TRADE).
+  var THIS_TRADE = 'mp';
 
   var SUPABASE_URL = 'https://owevmiwcacptrhchgtkx.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_FP-93thPbaqNpRG2e1ja0w_sx7pHmEj';
@@ -2396,11 +2417,22 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
   var IS_ADMIN = false;
   var MY_ROLE = 'staff';       // role on CURRENT_PROJECT: 'lead' | 'staff'
   var MY_STATUS = 'approved';  // status on CURRENT_PROJECT: 'pending' | 'approved'
+  // Per-trade staff restriction: MY_TRADES is the list of trade keys this
+  // account was explicitly granted on CURRENT_PROJECT (project_member_trades).
+  // An EMPTY list means "not restricted" (can edit every trade — the default,
+  // unchanged from before this feature existed). Leads/Admins are always
+  // unrestricted regardless of MY_TRADES. CAN_EDIT_THIS_TRADE is the single
+  // flag every mutation path below checks before allowing a change on THIS
+  // page (THIS_TRADE) — server-side RLS (can_edit_item_trade) mirrors the
+  // exact same rule, so this is a real permission, not just a UI hint.
+  var MY_TRADES = [];
+  var CAN_EDIT_THIS_TRADE = true;
   var realtimeChannel = null;
   var suppressRemote = false;  // true while applying a remote/initial update, to avoid write-back loops
   var CLIENT_ID = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   var PANEL_META = {"mp-p01-s01": {"title": "201. Project Information – Lead/Checker _ Thông tin dự án – Lead/Checker", "phase": "01"}, "mp-p01-s02": {"title": "202. Scope Check – Lead/Checker _ Kiểm tra phạm vi công việc – Lead/Checker", "phase": "01"}, "mp-p01-s03": {"title": "203. Scope Boundary _ Ranh giới phạm vi công việc", "phase": "01"}, "mp-p01-s04": {"title": "204. Input Documents _ Tài liệu đầu vào", "phase": "01"}, "mp-p01-s05": {"title": "205. Latest Information Check _ Kiểm tra thông tin mới nhất", "phase": "01"}, "mp-p01-s06": {"title": "206. Contract Review by Detailer _ Detailer đọc Contract", "phase": "01"}, "mp-p01-s07": {"title": "207. Trace Design Intent _ Lần theo ý đồ thiết kế", "phase": "01"}, "mp-p01-s08": {"title": "208. Document Conflict Check _ Kiểm tra mâu thuẫn tài liệu", "phase": "01"}, "mp-p02-s01": {"title": "209. Model Setup _ Thiết lập Model", "phase": "02"}, "mp-p02-s02": {"title": "210. Architecture Check _ Kiểm Architecture", "phase": "02"}, "mp-p02-s03": {"title": "211. Structure Check _ Kiểm Structure", "phase": "02"}, "mp-p02-s04": {"title": "212. Equipment Connection Check _ Kiểm điểm kết nối thiết bị", "phase": "02"}, "mp-p02-s05": {"title": "213. Equipment Check _ Kiểm Equipment", "phase": "02"}, "mp-p02-s06": {"title": "214. Routing Strategy _ Chiến lược Routing", "phase": "02"}, "mp-p02-s07": {"title": "215. Chilled Water Supply (CHWS) _ Ống cấp nước lạnh trung tâm", "phase": "02"}, "mp-p02-s08": {"title": "216. Chilled Water Return (CHWR) _ Ống hồi nước lạnh trung tâm", "phase": "02"}, "mp-p02-s09": {"title": "217. Hot Water Supply – Heating (HWS) _ Ống cấp nước nóng sưởi", "phase": "02"}, "mp-p02-s10": {"title": "218. Hot Water Return – Heating (HWR) _ Ống hồi nước nóng sưởi", "phase": "02"}, "mp-p02-s11": {"title": "219. Condenser Water Supply / Return (CWS/CWR) _ Ống nước giải nhiệt cấp/hồi", "phase": "02"}, "mp-p02-s12": {"title": "220. Steam & Steam Condensate _ Ống hơi nước & nước ngưng hồi", "phase": "02"}, "mp-p02-s13": {"title": "221. Refrigerant Piping _ Ống Gas lạnh / Refrigerant", "phase": "02"}, "mp-p02-s14": {"title": "222. Glycol / Specialty Piping _ Ống Glycol / hệ đặc biệt", "phase": "02"}, "mp-p03-s01": {"title": "223. Access / Maintenance _ Không gian tiếp cận / bảo trì", "phase": "03"}, "mp-p03-s02": {"title": "224. Insulation _ Bảo ôn / cách nhiệt", "phase": "03"}, "mp-p03-s03": {"title": "225. Hanger / Support _ Giá treo / hệ đỡ", "phase": "03"}, "mp-p03-s04": {"title": "226. Penetration Strategy _ Chiến lược Sleeve / lỗ xuyên", "phase": "03"}, "mp-p03-s05": {"title": "227. Deck / Floor Sleeve _ Sleeve xuyên Deck / sàn", "phase": "03"}, "mp-p03-s06": {"title": "228. Wall / Roof Sleeve / Opening _ Sleeve tường / mái / Opening", "phase": "03"}, "mp-p03-s07": {"title": "229. Core Drill _ Khoan Core", "phase": "03"}, "mp-p03-s08": {"title": "230. Deck Insert _ Insert chôn sẵn trong Deck", "phase": "03"}, "mp-p04-s01": {"title": "231. Elevation Check _ Kiểm cao độ", "phase": "04"}, "mp-p04-s02": {"title": "232. Coordination _ Phối hợp", "phase": "04"}, "mp-p04-s03": {"title": "233. Customer Issue / RFI _ Issue / RFI gửi khách hàng", "phase": "04"}, "mp-p04-s04": {"title": "234. Customer Response _ Xử lý phản hồi khách hàng", "phase": "04"}, "mp-p05-s01": {"title": "235. Trimble / Field Layout Point _ Điểm Trimble / Layout hiện trường", "phase": "05"}, "mp-p05-s02": {"title": "236. Underground Stub-Up _ Điểm ống ngầm chờ lên", "phase": "05"}, "mp-p05-s03": {"title": "237. Equipment Rough-In _ Điểm chờ Equipment", "phase": "05"}, "mp-p05-s04": {"title": "238. Field Layout Release _ Release Layout hiện trường", "phase": "05"}, "mp-p05-s05": {"title": "239. Pour Schedule Control _ Kiểm soát tiến độ đổ bê tông", "phase": "05"}, "mp-p06-s01": {"title": "240. Spool Ready _ Xác nhận đủ điều kiện làm Spool", "phase": "06"}, "mp-p06-s02": {"title": "241. Spool Planning / Break _ Lập kế hoạch / chia Spool", "phase": "06"}, "mp-p06-s03": {"title": "242. Field Connection _ Điểm kết nối tại hiện trường", "phase": "06"}, "mp-p06-s04": {"title": "243. Spool Drawing _ Bản vẽ Spool", "phase": "06"}, "mp-p06-s05": {"title": "244. Spool Dimension _ Dimension bản vẽ Spool", "phase": "06"}, "mp-p06-s06": {"title": "245. Spool QC / Release _ QC Spool / Release Fabrication", "phase": "06"}, "mp-p07-s01": {"title": "246. BOM – Bill of Materials _ Bảng vật tư", "phase": "07"}, "mp-p07-s02": {"title": "247. Pending / Hold Register _ Danh sách Pending / Hold", "phase": "07"}, "mp-p07-s03": {"title": "248. Superseded File Control _ Quản lý file đã bị thay thế", "phase": "07"}, "mp-p08-s01": {"title": "249. SHOP MP PIPE – IFR – ISSUE FOR REVIEW _ SHOP MP PIPE – PHÁT HÀNH ĐỂ KHÁCH HÀNG XEM XÉT", "phase": "08"}, "mp-p08-s02": {"title": "250. IFR CUSTOMER COMMENTS _ XỬ LÝ COMMENT KHÁCH HÀNG SAU IFR", "phase": "08"}, "mp-p08-s03": {"title": "251. IFA – ISSUE FOR APPROVAL – SHOP MP PIPE _ SHOP MP PIPE – PHÁT HÀNH ĐỂ PHÊ DUYỆT", "phase": "08"}, "mp-p08-s04": {"title": "252. APPROVAL RESPONSE _ PHẢN HỒI PHÊ DUYỆT", "phase": "08"}, "mp-p08-s05": {"title": "253. IFC – ISSUE FOR CONSTRUCTION – SHOP MP PIPE _ SHOP MP PIPE – PHÁT HÀNH ĐỂ THI CÔNG", "phase": "08"}, "mp-p08-s06": {"title": "254. PDF / FILENAME / TRANSMITTAL – SHOP MP PIPE _ KIỂM PDF / TÊN FILE / TRANSMITTAL – SHOP MP PIPE", "phase": "08"}, "mp-p08-s07": {"title": "255. SHOP PIPE SLEEVE – SLEEVE / PENETRATION DRAWING _ SHOP PIPE SLEEVE – BẢN VẼ SLEEVE / LỖ XUYÊN", "phase": "08"}, "mp-p09-s01": {"title": "256. Constructability _ Khả năng thi công", "phase": "09"}, "mp-p09-s02": {"title": "257. Detailer Self-Check _ Detailer tự kiểm", "phase": "09"}, "mp-p09-s03": {"title": "258. Checker QC _ Checker kiểm QC", "phase": "09"}, "mp-p09-s04": {"title": "259. QC Comment Update _ Cập nhật comment QC", "phase": "09"}, "mp-p09-s05": {"title": "260. Revision Impact _ Kiểm ảnh hưởng Revision", "phase": "09"}, "mp-p09-s06": {"title": "261. Field Feedback _ Phản hồi hiện trường", "phase": "09"}, "mp-p09-s07": {"title": "262. Final Closeout _ Hoàn tất dự án/khu vực", "phase": "09"}, "mp-p09-s08": {"title": "FINAL SIGN-OFF – DETAILER _ XÁC NHẬN CUỐI – DETAILER", "phase": "09"}, "mp-p09-s09": {"title": "FINAL SIGN-OFF – LEAD/CHECKER _ XÁC NHẬN CUỐI – LEAD/CHECKER", "phase": "09"}};
   var PHASE_TITLES = {"01": "Project Setup", "02": "Modeling", "03": "Engineering & Supports", "04": "Coordination", "05": "Trimble / Field Layout", "06": "Spooling", "07": "BOM / Reports", "08": "Shop MP Pipe Drawings", "09": "QC / Final Review"};
+  var TRADE_LIST = [{"key": "plumbing", "label": "Plumbing"}, {"key": "hvac", "label": "HVAC"}, {"key": "mp", "label": "Mechanical Piping"}, {"key": "fp", "label": "Fire Protection"}, {"key": "el", "label": "Electrical"}];
   var itemMeta = {};           // item_id -> {by, at} for answered items (drives the management dashboard)
   var ASSIGNMENTS = {};        // panel_id -> assignee name (soft, coordination-only "Giao cho" label)
   var assignInputs = Array.prototype.slice.call(document.querySelectorAll('.assigninput'));
@@ -3045,9 +3077,9 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
   }
   document.addEventListener('click', function(e) {
     var addBtn = e.target.closest('.check2btn');
-    if (addBtn) { saveCheck2(addBtn.getAttribute('data-check2-item'), addBtn.getAttribute('data-check2-target')); return; }
+    if (addBtn) { if (CAN_EDIT_THIS_TRADE) saveCheck2(addBtn.getAttribute('data-check2-item'), addBtn.getAttribute('data-check2-target')); return; }
     var badge = e.target.closest('.check2badge-clickable');
-    if (badge) { clearCheck2(badge.getAttribute('data-check2-item'), badge.getAttribute('data-check2-target')); return; }
+    if (badge) { if (CAN_EDIT_THIS_TRADE) clearCheck2(badge.getAttribute('data-check2-item'), badge.getAttribute('data-check2-target')); return; }
   });
   // "+N người khác" toggle under an assigned item's status list: reveals the
   // rows past the first 2 (see assignedStatusHtml). Recomputes the hidden
@@ -3169,14 +3201,16 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
     var assignees = itemAssignees[itemId] || [];
     sharedLabel.style.display = '';
     if (!assignees.length) {
-      el.disabled = false;
+      el.disabled = !CAN_EDIT_THIS_TRADE;
       multiEl.style.display = 'none';
       multiEl.innerHTML = '';
       if (btn) btn.classList.remove('has-assignees');
       return;
     }
     var isMe = !!(CURRENT_USER && assignees.some(function(a) { return a.user_id === CURRENT_USER.id; }));
-    el.disabled = !isMe;
+    // Trade lock always wins: even a real assignee can't edit on a page for
+    // a trade they weren't granted (mirrored server-side by can_edit_item_trade).
+    el.disabled = !isMe || !CAN_EDIT_THIS_TRADE;
     if (btn) btn.classList.add('has-assignees');
     var isDaily = el.hasAttribute('data-daily');
     multiEl.innerHTML = '<div class="assignedstatus-list">' + assignedStatusHtml(itemId, assignees, isDaily, !isDaily) + '</div>';
@@ -3192,13 +3226,13 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
     var assignees = itemAssignees[itemId] || [];
     sharedDiv.style.display = '';
     if (!assignees.length) {
-      selectEl.disabled = false;
+      selectEl.disabled = !CAN_EDIT_THIS_TRADE;
       multiDiv.style.display = 'none';
       multiDiv.innerHTML = '';
       return;
     }
     var isMe = !!(CURRENT_USER && assignees.some(function(a) { return a.user_id === CURRENT_USER.id; }));
-    selectEl.disabled = !isMe;
+    selectEl.disabled = !isMe || !CAN_EDIT_THIS_TRADE;
     // Dropdown/status items never carry Check 2 (same rule as non-assigned
     // dropdown items — Check 2 is only meaningful for a simple yes/no tick).
     multiDiv.innerHTML = '<div class="scopecell-assignedstatus assignedstatus-list">' + assignedStatusHtml(itemId, assignees, false, false) + '</div>';
@@ -3342,7 +3376,7 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
   // already confirmed their own part).
   function handleAssignedToggle(el, itemId) {
     var assignees = itemAssignees[itemId] || [];
-    if (!CURRENT_USER || !assignees.some(function(a) { return a.user_id === CURRENT_USER.id; })) {
+    if (!CAN_EDIT_THIS_TRADE || !CURRENT_USER || !assignees.some(function(a) { return a.user_id === CURRENT_USER.id; })) {
       syncSharedCheckboxFromConfirmations(itemId); // shouldn't happen (input is disabled) — just resync
       return;
     }
@@ -3452,6 +3486,7 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
   allEls.forEach(function(el) {
     el.addEventListener('change', function() {
       var id = idOf(el);
+      if (!CAN_EDIT_THIS_TRADE) { syncSharedCheckboxFromConfirmations(id); return; } // shouldn't happen (input is disabled) — just resync
       if ((itemAssignees[id] || []).length) {
         handleAssignedToggle(el, id);
         return;
@@ -3464,6 +3499,7 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
 
   document.querySelectorAll('.checkallbtn').forEach(function(btn) {
     btn.addEventListener('click', function() {
+      if (!CAN_EDIT_THIS_TRADE) return; // shouldn't happen (button is disabled) — just a safety net
       var scope = btn.getAttribute('data-scope');
       var target = btn.getAttribute('data-target');
       var inScope = checkboxes.filter(function(cb) {
@@ -3543,6 +3579,7 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
   }
 
   document.getElementById('btnReset').addEventListener('click', function() {
+    if (!CAN_EDIT_THIS_TRADE) { alert('Bạn chỉ có quyền xem ngành này, không thể Reset All.'); return; }
     if (!confirm('Clear every checked box / selected status for this ENTIRE PROJECT? This affects EVERYONE sharing the project (not just this device) and cannot be undone.')) return;
     checkboxes.forEach(function(cb) { cb.checked = false; });
     selects.forEach(function(sel) { sel.value = ''; });
@@ -3704,6 +3741,7 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
     CURRENT_USER = null;
     MY_PROJECTS = [];
     IS_ADMIN = false; MY_ROLE = 'staff'; MY_STATUS = 'approved';
+    MY_TRADES = []; CAN_EDIT_THIS_TRADE = true;
     clearLastProject();
     if (sb) sb.auth.signOut();
     gateNameEl.value = ''; gateCodeEl.value = '';
@@ -3748,6 +3786,32 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
     }).catch(function() { return {role: 'staff', status: 'approved'}; });
   }
   function canManageAssignments() { return IS_ADMIN || MY_ROLE === 'lead'; }
+  // Leads/Admins are always unrestricted. A staff account with ZERO rows in
+  // project_member_trades is also unrestricted (the default — matches every
+  // account's behavior before this feature existed). Only once a Lead/Admin
+  // explicitly grants specific trade(s) does a staff account become locked
+  // to editing just those trades on every OTHER trade's page.
+  function checkMyTrades(projectId) {
+    if (canManageAssignments()) { MY_TRADES = []; CAN_EDIT_THIS_TRADE = true; return Promise.resolve(); }
+    return sb.from('project_member_trades').select('trade').eq('project_id', projectId).eq('user_id', CURRENT_USER.id).then(function(res) {
+      MY_TRADES = (res.error ? [] : (res.data || [])).map(function(r) { return r.trade; });
+      CAN_EDIT_THIS_TRADE = !MY_TRADES.length || MY_TRADES.indexOf(THIS_TRADE) !== -1;
+    }).catch(function() { MY_TRADES = []; CAN_EDIT_THIS_TRADE = true; });
+  }
+  function applyTradeLockUi() {
+    var banner = document.getElementById('tradeLockBanner');
+    if (banner) banner.style.display = CAN_EDIT_THIS_TRADE ? 'none' : 'flex';
+    var resetBtn = document.getElementById('btnReset');
+    // Always set an explicit state (not just early-return when unlocked) —
+    // this runs fresh on every openProject() (login, project switch,
+    // pending-recheck), and a PREVIOUS project/account in the same page
+    // session may have left everything disabled from being trade-locked.
+    // Per-item assignee-based disabling (renderCheckboxAssignMode etc.)
+    // still applies normally afterward once startProjectSync() loads it.
+    allEls.forEach(function(el) { el.disabled = !CAN_EDIT_THIS_TRADE; });
+    document.querySelectorAll('.checkallbtn').forEach(function(btn) { btn.disabled = !CAN_EDIT_THIS_TRADE; });
+    if (resetBtn) resetBtn.disabled = !CAN_EDIT_THIS_TRADE;
+  }
   function updateRoleUi() {
     var canManage = canManageAssignments();
     assignInputs.forEach(function(inp) {
@@ -3814,7 +3878,10 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
       gateOverlay.style.display = 'none';
       var sel = document.getElementById('projectSwitcher');
       if (sel) sel.value = id;
-      startProjectSync();
+      checkMyTrades(id).then(function() {
+        applyTradeLockUi();
+        startProjectSync();
+      });
     });
   }
 
@@ -4062,31 +4129,65 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
   });
 
   // ---- Lead approvals: staff who requested to join the CURRENT project and
-  // are still pending. Visible to the project's Lead(s) and to Admins. ----
+  // are still pending, PLUS per-trade edit access management for everyone
+  // already approved. Visible to the project's Lead(s) and to Admins. ----
+  function tradeCheckboxesHtml(uid, grantedSet) {
+    return '<span class="tradecheckboxes">' + TRADE_LIST.map(function(t) {
+      return '<label class="tradecheckbox"><input type="checkbox" data-trade-user="' + esc(uid) + '" data-trade="' + esc(t.key) + '"' +
+        (grantedSet.has(t.key) ? ' checked' : '') + '> ' + esc(t.label) + '</label>';
+    }).join('') + '</span>';
+  }
+  function readCheckedTrades(uid, root) {
+    return Array.prototype.slice.call(root.querySelectorAll('input[data-trade-user="' + uid + '"]:checked')).map(function(cb) {
+      return cb.getAttribute('data-trade');
+    });
+  }
   function renderLeadApprovals() {
     document.getElementById('leadProjectName').textContent = CURRENT_PROJECT ? CURRENT_PROJECT.name : '';
-    var listEl = document.getElementById('leadPendingList');
-    listEl.innerHTML = '<p class="dashempty">Đang tải...</p>';
+    var pendingEl = document.getElementById('leadPendingList');
+    var tradesEl = document.getElementById('leadTradesList');
+    pendingEl.innerHTML = '<p class="dashempty">Đang tải...</p>';
+    tradesEl.innerHTML = '<p class="dashempty">Đang tải...</p>';
     if (!sb || !CURRENT_PROJECT) return;
-    sb.from('project_members').select('user_id').eq('project_id', CURRENT_PROJECT.id).eq('status', 'pending').then(function(res) {
+    sb.from('project_members').select('user_id,role,status').eq('project_id', CURRENT_PROJECT.id).then(function(res) {
       var rows = res.data || [];
-      if (!rows.length) {
-        listEl.innerHTML = '<p class="dashempty">Không có ai đang chờ duyệt.</p>';
+      var pendingRows = rows.filter(function(r) { return r.status === 'pending'; });
+      var approvedStaffRows = rows.filter(function(r) { return r.status === 'approved' && r.role === 'staff'; });
+      var allIds = rows.map(function(r) { return r.user_id; });
+      if (!allIds.length) {
+        pendingEl.innerHTML = '<p class="dashempty">Không có ai đang chờ duyệt.</p>';
+        tradesEl.innerHTML = '<p class="dashempty">Chưa có Nhân viên nào.</p>';
         return;
       }
-      var ids = rows.map(function(r) { return r.user_id; });
-      sb.from('profiles').select('user_id,display_name,email').in('user_id', ids).then(function(pres) {
-        var profiles = pres.data || [];
-        listEl.innerHTML = ids.map(function(uid) {
+      var profilesP = sb.from('profiles').select('user_id,display_name,email').in('user_id', allIds);
+      var tradesP = sb.from('project_member_trades').select('user_id,trade').eq('project_id', CURRENT_PROJECT.id);
+      Promise.all([profilesP, tradesP]).then(function(results) {
+        var profiles = results[0].data || [];
+        var tradeRows = results[1].data || [];
+        function nameFor(uid) {
           var p = profiles.filter(function(x) { return x.user_id === uid; })[0];
-          var label = p ? (esc(p.display_name || p.email || uid)) : esc(uid);
+          return p ? (esc(p.display_name || p.email || uid) + (p.email ? (' <span class="dashempty">(' + esc(p.email) + ')</span>') : '')) : esc(uid);
+        }
+        function grantedSetFor(uid) {
+          return new Set(tradeRows.filter(function(t) { return t.user_id === uid; }).map(function(t) { return t.trade; }));
+        }
+        pendingEl.innerHTML = pendingRows.length ? pendingRows.map(function(r) {
+          var uid = r.user_id;
           return '<div class="pendingrow" data-user="' + esc(uid) + '">' +
-            '<span>' + label + (p && p.email ? (' <span class="dashempty">(' + esc(p.email) + ')</span>') : '') + '</span>' +
+            '<span>' + nameFor(uid) + '</span>' +
+            tradeCheckboxesHtml(uid, new Set()) +
             '<span class="pendingrow-actions">' +
               '<button type="button" class="toolbtn" data-approve="' + esc(uid) + '">✓ Duyệt</button>' +
               '<button type="button" class="toolbtn danger" data-reject="' + esc(uid) + '">✕ Từ chối</button>' +
             '</span></div>';
-        }).join('');
+        }).join('') : '<p class="dashempty">Không có ai đang chờ duyệt.</p>';
+        tradesEl.innerHTML = approvedStaffRows.length ? approvedStaffRows.map(function(r) {
+          var uid = r.user_id;
+          return '<div class="pendingrow" data-user="' + esc(uid) + '">' +
+            '<span>' + nameFor(uid) + '</span>' +
+            tradeCheckboxesHtml(uid, grantedSetFor(uid)) +
+            '</div>';
+        }).join('') : '<p class="dashempty">Chưa có Nhân viên nào đã duyệt.</p>';
       });
     });
   }
@@ -4096,10 +4197,33 @@ SPOOL → BOM → IFC → MODEL → HIỆN TRẠNG FIELD → CONTRACT → SUBMIT
     if (!approveBtn && !rejectBtn) return;
     if (!CURRENT_PROJECT) return;
     var uid = (approveBtn || rejectBtn).getAttribute(approveBtn ? 'data-approve' : 'data-reject');
-    var rpcName = approveBtn ? 'approve_member' : 'reject_member';
-    sb.rpc(rpcName, {p_project_id: CURRENT_PROJECT.id, p_user_id: uid}).then(function(res) {
+    if (rejectBtn) {
+      sb.rpc('reject_member', {p_project_id: CURRENT_PROJECT.id, p_user_id: uid}).then(function(res) {
+        if (res.error) { alert('Lỗi: ' + res.error.message); return; }
+        renderLeadApprovals();
+      });
+      return;
+    }
+    var row = approveBtn.closest('.pendingrow');
+    var trades = row ? readCheckedTrades(uid, row) : [];
+    sb.rpc('approve_member', {p_project_id: CURRENT_PROJECT.id, p_user_id: uid}).then(function(res) {
       if (res.error) { alert('Lỗi: ' + res.error.message); return; }
+      return sb.rpc('set_member_trades', {p_project_id: CURRENT_PROJECT.id, p_user_id: uid, p_trades: trades});
+    }).then(function(res2) {
+      if (res2 && res2.error) { alert('Đã duyệt nhưng lỗi khi lưu ngành: ' + res2.error.message); }
       renderLeadApprovals();
+    });
+  });
+  // Already-approved staff: every trade-checkbox change for that person
+  // auto-saves the FULL current set (set_member_trades replaces wholesale).
+  document.getElementById('leadTradesList').addEventListener('change', function(e) {
+    var cb = e.target.closest('input[data-trade-user]');
+    if (!cb || !CURRENT_PROJECT) return;
+    var uid = cb.getAttribute('data-trade-user');
+    var row = cb.closest('.pendingrow');
+    var trades = row ? readCheckedTrades(uid, row) : [];
+    sb.rpc('set_member_trades', {p_project_id: CURRENT_PROJECT.id, p_user_id: uid, p_trades: trades}).then(function(res) {
+      if (res.error) { alert('Lỗi: ' + res.error.message); renderLeadApprovals(); }
     });
   });
   document.getElementById('btnLeadApprovals').addEventListener('click', function() {
