@@ -52,6 +52,11 @@
     border-color:var(--accent);
     cursor:default;
   }
+  .tradelink-home{
+    background:rgba(255,255,255,.12);
+    border-color:rgba(255,255,255,.3);
+    margin-right:8px;
+  }
   .tradelockbanner{
     display:flex;align-items:center;gap:8px;
     font-size:13px;color:#7a4a12;
@@ -133,6 +138,9 @@
   .card.flash-highlight, .itempanel.flash-highlight{
     animation:flashglow 1.6s ease;
   }
+  .homelinkcard{padding:12px 22px;}
+  .homelinkcard a{color:var(--accent);font-weight:600;text-decoration:none;}
+  .homelinkcard a:hover{text-decoration:underline;}
   @keyframes flashglow{
     0%{box-shadow:0 0 0 3px var(--accent);}
     100%{box-shadow:0 1px 2px rgba(16,24,32,.04);}
@@ -551,8 +559,9 @@
 </div>
 
 <div class="tradebar">
+  <a href="index.html" class="tradelink tradelink-home" title="Về trang chủ: GUIDE, LEGEND, ROLES, PHÂN QUYỀN">🏠 Home</a>
   <span class="tradebar-label">Ngành:</span>
-  <a href="index.html" class="tradelink" data-trade="plumbing">Plumbing</a>
+  <a href="flow_diagram_plumbing.html" class="tradelink" data-trade="plumbing">Plumbing</a>
     <span class="tradelink tradelink-active" data-trade="hvac">HVAC</span>
     <a href="flow_diagram_mp.html" class="tradelink" data-trade="mp">Mechanical Piping</a>
     <a href="flow_diagram_fp.html" class="tradelink" data-trade="fp">Fire Protection</a>
@@ -601,63 +610,9 @@
     <p class="subtitle">Bản đầy đủ: sơ đồ tổng quan 9 Giai đoạn (theo quy trình dự án thực tế) + sơ đồ nội bộ (logic thật, có nhánh quyết định, phân vai trò) cho từng Giai đoạn + toàn bộ checklist item gốc, có ô tích / dropdown trạng thái để đánh dấu tiến độ, tự động đồng bộ qua Internet cho cả nhóm.</p>
   </header>
 
-  <div class="card">
-    <h2><span class="tag">GUIDE</span> Cách tích, chọn trạng thái & làm việc chung</h2>
-    <p style="font-size:13px;color:var(--sub);margin:0 0 8px;">
-      Tích vào từng mục khi đã hoàn thành. Một số mục (vd. Scope Boundary, Document Conflict Check, Approval Status, Shop Sleeve Status...) hiển thị dưới dạng <b>dropdown chọn trạng thái</b> thay vì ô tích, vì bản chất là chọn 1 trong nhiều trạng thái chứ không phải chỉ "đã làm/chưa làm". Nếu cả một mục nhỏ hoặc cả một Giai đoạn đã xong, dùng nút <b>"☑ Check All"</b> ở đầu mỗi khung (hoặc <b>"☑ Check All Phase"</b> ở đầu mỗi Giai đoạn) để tích nhanh toàn bộ ô tích — nút này không tự chọn hộ các dropdown trạng thái, để tránh chọn sai. Các mục có nhãn <b>🔁 "Cần làm hôm nay"</b> là việc lặp lại mỗi ngày — tự reset về chưa tích vào ngày hôm sau, không tính vào % hoàn thành chung của cả dự án.
-    </p>
-    <p style="font-size:13px;color:var(--sub);margin:0 0 8px;">
-      <b>Dùng chung nhiều người — tự đồng bộ qua Internet:</b> đăng nhập bằng email, sau đó nhập Tên dự án + Mã truy cập (hoặc chọn dự án đã tham gia ở dropdown trên thanh công cụ) để "vào" đúng dự án của mình. Mọi người trong cùng dự án (dù ở máy khác, nơi khác) sẽ thấy chung 1 checklist — ai tích hoặc chọn trạng thái, người khác đang mở trang cũng thấy cập nhật gần như ngay lập tức, không cần tải lại trang. Góc thanh công cụ có chấm tròn báo trạng thái kết nối (xanh = đang đồng bộ tốt). Muốn thêm hoặc chuyển dự án khác, dùng dropdown dự án hoặc nút <b>"+ Join Project"</b> trên thanh công cụ. Nút <b>"📊 Dashboard"</b> cho xem tổng quan tiến độ tất cả các Giai đoạn/khung trong dự án ở một màn hình.
-    </p>
-    <p style="font-size:13px;color:var(--sub);margin:0 0 8px;">
-      <b>Giao việc riêng cho từng người:</b> có 2 cách. (1) Gõ tên vào ô "Giao cho" ở đầu mỗi khung — tên nào khớp đúng với tên hiển thị của một tài khoản đã tham gia dự án sẽ áp dụng cho <i>toàn bộ</i> các mục trong khung đó; sửa lại ô này sẽ áp lại danh sách mới cho cả khung. (2) Bấm nút <b>"👤+"</b> ngay cạnh một mục cụ thể để chỉ giao riêng mục đó cho một hoặc vài người, không ảnh hưởng các mục khác trong khung. Mục đã giao việc chỉ còn <b>1 ô tích/dropdown dùng chung</b>, nhưng chỉ những người được giao mới tích/chọn được — người khác nhìn thấy nhưng không thao tác được. Bên dưới có danh sách trạng thái riêng của từng người (✓ đã làm / ○ chưa làm, kèm thời gian); nếu được giao từ 3 người trở lên, mặc định chỉ hiện 2 người đầu, bấm dòng "+N người khác" để xem đủ danh sách.
-    </p>
-    <p style="font-size:13px;color:var(--sub);margin:0 0 8px;">
-      <b>Xác nhận thêm (mục không giao riêng ai):</b> với các mục KHÔNG giao việc riêng, ô tích vẫn dùng chung cho cả nhóm — nhưng nếu một người khác cũng bấm tích vào mục đã có người tích rồi, hệ thống ghi nhận thêm xác nhận của người đó (không làm mất xác nhận của người đầu tiên), hiện thêm một dòng "✓ Tên · giờ" ngay bên dưới. Cách này dùng để nhiều người cùng xác nhận một mục dùng chung mà không cần giao việc riêng.
-    </p>
-    <p style="font-size:13px;color:var(--sub);margin:0 0 8px;">
-      <b>🔍 Check 2 — kiểm tra chéo:</b> với mỗi xác nhận (dù là mục giao riêng hay mục dùng chung, trừ dropdown trạng thái và mục 🔁 hằng ngày), một người KHÁC (không phải người vừa tích) sẽ thấy nút <b>"+ Check 2"</b> ngay cạnh — bấm vào để xác nhận mình đã kiểm tra lại phần việc đó, hiện thành huy hiệu xanh <b>"🔍 Check 2: Tên người kiểm tra"</b>. Huy hiệu do chính bạn tạo hiện rõ màu; huy hiệu do người khác tạo sẽ hơi mờ đi để dễ phân biệt bạn đã tự kiểm tra phần nào. Bấm lại vào huy hiệu của chính mình để rút lại nếu bấm nhầm. Check 2 chỉ để theo dõi/kiểm tra chéo nội bộ, không ảnh hưởng tới % hoàn thành hay Check All.
-    </p>
-    <p style="font-size:12px;color:var(--sub);margin:0;">
-      Lưu ý: đồng bộ cần có Internet. Nếu mất mạng giữa chừng, trang vẫn cho tích bình thường trên máy bạn, chấm trạng thái sẽ chuyển đỏ báo "mất kết nối" — khi có mạng lại, bấm tích thêm 1 mục bất kỳ (hoặc tải lại trang) để đồng bộ tiếp.
-    </p>
-  </div>
-
-  <div class="card">
-    <h2><span class="tag">LEGEND</span> Trạng thái sử dụng trong Checklist</h2>
-    <div class="legend">
-      <div class="item"><span class="swatch" style="background:#2c8a4e"></span>PASS (Đạt) → chuyển Giai đoạn tiếp theo</div>
-      <div class="item"><span class="swatch" style="background:#c0392b"></span>FAIL (Không đạt) → sửa trước khi chuyển</div>
-      <div class="item"><span class="swatch" style="background:#c99a2e"></span>PENDING CUSTOMER → phần liên quan bị giữ lại, phần còn lại tiếp tục</div>
-      <div class="item"><span class="swatch" style="background:#c9622e"></span>HOLD → không triển khai / release phần bị ảnh hưởng</div>
-      <div class="item"><span class="swatch" style="background:#6a4bc9"></span>NOT FOR FABRICATION → tuyệt đối không dùng để Spool / Fabrication Release</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2><span class="tag">ROLES</span> Ai làm gì trong quy trình</h2>
-    <div class="legend">
-      <div class="item"><span class="swatch" style="background:#2c6ea6"></span><b>Detailer</b> — trực tiếp dựng model, vẽ, kiểm tra kỹ thuật, xử lý comment/RFI về mặt nội dung</div>
-      <div class="item"><span class="swatch" style="background:#7c4fd6"></span><b>Checker / Lead</b> — duyệt Giai đoạn (PASS/FAIL), issue bản vẽ chính thức (IFR/IFA/IFC), làm việc với khách hàng, quản lý Pending/Hold Register</div>
-    </div>
-    <p style="font-size:12px;color:var(--sub);margin:10px 0 0;">Lưu ý: checklist gốc chỉ ghi rõ vai trò ở một số mục (vd. "Lead/Checker", "by Detailer", "Detailer Self-Check", "Checker QC"). Các mục còn lại được gán vai trò theo thực tế vận hành thông thường của quy trình BIM/MEP Detailing (Detailer triển khai kỹ thuật, Checker/Lead duyệt & kiểm soát giai đoạn) — bạn nên đối chiếu lại với cách phân công thực tế của team mình. Đây chỉ là vai trò mô tả quy trình làm việc — khác với <b>quyền thao tác trong ứng dụng</b> ở mục ngay bên dưới.</p>
-  </div>
-
-  <div class="card">
-    <h2><span class="tag">PHÂN QUYỀN</span> 3 cấp quyền thao tác trong ứng dụng</h2>
-    <p style="font-size:13px;color:var(--sub);margin:0 0 8px;">
-      Ứng dụng có 3 cấp quyền độc lập với vai trò BIM/MEP ở trên — quyền này quyết định ai được giao việc, duyệt thành viên, tạo dự án mới:
-    </p>
-    <div class="legend">
-      <div class="item"><span class="swatch" style="background:#c9922e"></span><b>👑 Admin</b> — cấp cao nhất. Là người duy nhất tạo được dự án mới, và chỉ Admin mới chỉ định ai làm Trưởng dự án cho từng dự án (qua nút <b>"👑 Admin"</b> trên thanh công cụ, chỉ Admin mới thấy nút này).</div>
-      <div class="item"><span class="swatch" style="background:#7c4fd6"></span><b>Trưởng dự án</b> — do Admin chỉ định riêng cho từng dự án. Được quyền giao việc cho nhân viên (ô "Giao cho" + nút "👤+"), duyệt/từ chối nhân viên mới xin vào dự án, và chỉ định nhân viên được sửa (các) ngành nào — tất cả qua nút <b>"✅ Duyệt thành viên"</b> trên thanh công cụ (chỉ Trưởng dự án/Admin mới thấy nút này). Trưởng dự án luôn sửa được TẤT CẢ các ngành trong dự án của mình, không bị giới hạn theo ngành.</div>
-      <div class="item"><span class="swatch" style="background:#2c6ea6"></span><b>Nhân viên</b> — mặc định khi tham gia dự án. Chỉ tích/chọn được các mục mình được giao (hoặc mục dùng chung, không giao riêng ai) — không giao việc được cho người khác, ô "Giao cho" và nút "👤+" sẽ bị khoá/ẩn.</div>
-    </div>
-    <p style="font-size:12px;color:var(--sub);margin:10px 0 0;">
-      Nhân viên tham gia một dự án ĐÃ có người khác đang dùng (nhập đúng Tên dự án + Mã truy cập) sẽ ở trạng thái <b>"Đang chờ duyệt"</b> — chưa xem/thao tác được checklist cho tới khi Trưởng dự án hoặc Admin bấm duyệt. Đây là để tránh người lạ biết mã truy cập tự ý vào xem dữ liệu dự án.
-    </p>
-    <p style="font-size:12px;color:var(--sub);margin:6px 0 0;">
-      <b>Giới hạn theo ngành (Plumbing/HVAC/Mechanical Piping/Fire Protection/Electrical):</b> khi duyệt một Nhân viên (hoặc bất kỳ lúc nào sau đó), Trưởng dự án/Admin có thể tick chọn đúng (các) ngành người đó được sửa. Nếu không tick ngành nào, Nhân viên đó KHÔNG bị giới hạn — sửa được mọi ngành trong dự án như trước đây. Nếu đã tick ít nhất 1 ngành, sang các ngành KHÁC (không nằm trong danh sách được tick) trang sẽ tự khoá toàn bộ ô tích/dropdown lại — chỉ xem, không sửa được — kèm banner cảnh báo ở đầu trang.
+  <div class="card homelinkcard">
+    <p style="font-size:13px;color:var(--sub);margin:0;">
+      📘 Hướng dẫn sử dụng, chú thích trạng thái, vai trò và phân quyền của ứng dụng đã chuyển sang <a href="index.html">🏠 Trang chủ</a> — trang này chỉ còn sơ đồ quy trình + checklist của ngành HVAC.
     </p>
   </div>
 
